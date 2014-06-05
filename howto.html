@@ -1,0 +1,107 @@
+<style type="text/css">
+body {
+font-family: "Calibri","Tahoma","Arial","Segoe UI","Helvetica Neue",sans-serif;
+}
+</style>
+
+<h1>Download and Installation</h1>
+
+<p>Simply download the Zip-File and unpack it into a directory of your choice. There is no installer.
+It runs right from within the directory where you unpack it.</p>
+
+<p>Open a command-prompt and change to the directory where you unpacked the files. Run "makedirs.bat". This will create
+several subdirectories within your install directory that will hold all the data-files.</p>
+
+<p>Next go to "http://www.alexa.com/topsites". On the top-right you will find a link to "Top 1,000,000 Sites". Download
+that file and unpack it into the same directory where you put the other files. In the command-prompt run the command:</p>
+
+<p><strong>ImportAlexa top-1m.csv domainrank.txt</strong></p>
+
+<p>This will take a few seconds and will convert the file from Alexa.com into a simpler
+format that the software uses as part of the result-ranking.</p>
+
+<p>Now run the program "ImportUrls". At this point this will only create an empty URL-database.</p>
+
+<p>You will now need some starting-points for the crawler. In the command-prompt enter the following command:</p>
+
+<p><strong>copy domainrank.txt data\txt\urls.txt</strong></p>
+
+<p>This will use the top 1 million sites according to Alexa.com as a starting-point for your crawl. If one million URLs
+sounds like a lot to you... you ain't seen nothing yet. :)</p>
+
+<p>Now these URLs need to be imported into the URL-database. Run "openacoon.bat". This batch-file will also later be used
+when you are in the middle of a crawl to process all the data. Right now it will only import the starting URLs into the
+database. The batch-file will run continuously, so you need to abort it at the right point. It will pause for 5 seconds
+every pass. You will see this point when it counts down the seconds... 5...4...3...2...1... Sometime during that simply
+press Ctrl-C and abort the batch-file. You should NEVER abort openacoon.bat at any other point. It may damage the
+databases. That's why there is a visible countdown, so that you know when you can safely stop the batch-file.</p>
+
+<p>You should now have about 1 million URLs in the database. So now you need to give these to the actual robot. That is
+done with the program "PrepareRobot.exe". This will take up to 3 parameters. First parameter is the maximum number of
+URLs (this can be up to 100 million), 2nd and 3rd are starting and ending shard-number. The database is organized into
+several shards or chunks. The default is 128 shards. This can be changed by changing two constants in the source-code
+and recompiling, but you will probably never need to do this. 128 should work just fine.</p>
+
+<p>The starting and ending numbers are there so that you can give the crawler smaller, clearly defined pieces to work
+with. For the first test you can ignore this. So enter this command:</p>
+
+<p><strong>PrepareRobot 10000000</strong></p>
+
+<p>(that's 10 million, plenty enough for now)</p>
+
+<p>This will take a few seconds or up to about a minute at this point. Once you have several hundred million URLs in the
+database, this could easily take about an hour though.</p>
+
+<p>Ok, before the next step you will need to open a second command-prompt. This one will be used to run the parser-loop.
+Change to your install-directory and start "parse.bat". This will run parser.exe again and again in an endless loop.</p>
+
+<p>In your first command-prompt start "robot.exe". Depending on the number of URLs to crawl the startup of robot.exe
+can take up to a minute or two. With only 1 million URLs it should only take a few seconds.</p>
+
+<p>The window of robot.exe will show you some information about how fast it is crawling and – very importantly – it will
+let you change how many connections it should run simultaneously. Now this is actually a danger point. If you are
+running this test over a DSL or cable connection, then you should NOT go beyond 100 connections. Some ISPs set a
+limit for how many half-open connections you can have, and going beyond 100 connections could easily make you reach
+that limit. If you are running your test on a dedicated server with a fast internet connection, then you can easily
+use more than 1000 connections. You will have to experiment with this. Note that this will also depend on where
+you are in the crawl. At the beginning of a crawl the crawler is very busy doing all the DNS lookups, so you may need
+to use a lower connection-limit then, compared to later in the crawl.</p>
+
+<p>Anyway, while the robot starts up (or very shortly thereafter) you should start "openacoon.bat" again, so that it can
+handle all the data-processing.</p>
+
+<p>Note: I'm usually running this software on a server with a quad-core 3.2GHz CPU, 32gb RAM, and a 1gbit/s
+internet-connection. The limit for this machine is a crawl at about 1000 pages/s and 400mbit/s of incoming bandwidth.</p>
+
+<p>When you want to end the robot, set the connection-limit to 0 and wait a bit for it to finish all the work. Then you
+can quit the robot. You should then wait a few seconds more for parse.bat, so that it can process all the incoming data.
+And yet wait another bit for openacoon.bat to finish processing the data. Quit openacoon.bat at some point when you see
+it counting down from 5 to 0. Remember to NEVER abort openacoon.bat at some other point.</p>
+
+<p>You can now begin another PrepareRobot / Robot / OpenAcoon.bat loop, or you can generate your first search-index. Here's
+how to build an index: Simply start Gendb.exe from the command-prompt. With a very small amount of WWW-pages this will
+only take about a minute or two. With larger amounts of data you should expect it to be on the order of one hour per 40 million pages.</p>
+
+<p>Note that GenDb.exe will create some temp files that it will NOT clear up when done. It keeps these more or less for
+debugging-purposes. Before you can make another GenDb-run you will need to delete gendb.progress and everything in the 
+data\tmp directory.</p>
+
+<p>Once the index is generated, start SearchServer.exe. The first time you do this you will probably see an alert from your
+firewall as the SearchServer will need to listen on port 8081. Set your firewall to allow this.</p>
+
+<p>Open your web-browser and enter the following URL:</p>
+
+<p><strong>http://127.0.0.1:8081/query.html?startwith=1&q=[keyword]</strong></p>
+
+<p>Use a keyword (or more than one) of your choice of course. What you will then see in the browser will look a little
+weird at first. Take a look at the source of that page to get a clearer view. This format is not meant for an end-user,
+but rather for a script on your own website, which should then format it in a... well... more human-readable way. :)</p>
+
+<p>Ok, ok... I know that this short introduction was probably WAY too short. It does contain all the necessary steps for
+you to get a search-index up-and-running, but it doesn't go deeply into what is actually going on. There is also some
+stuff that I left out that will become important when you REALLY try to push the software to its limits. One tip: Do
+NOT use your provider's DNS-server for a big and fast crawl. They would hate you for this. :)</p>
+
+<p>Another useful tip: Disable your antivirus for the "data\crawler" subdirectory. You will be crawling a <strong>lot</strong>
+of pages, so some of them <strong>will</strong> have bad things on them. Plus, having antivirus check these files will
+<strong>REALLY</strong> slow things down.</p>

@@ -1,0 +1,177 @@
+; openacoon.config.default
+;
+; All lines starting with ";" are always ignored by the software.
+; From all other lines, only those containing an equal-sign ("=")
+; are actually processed by the software.
+;
+; Setting-names are case-independent. That means that "useragent"
+; and "UserAgent" are the same for the software.
+;
+; If there is more than one occurence for any setting, only the
+; last one is used.
+;
+; Setting names and setting values may contain spaces. There is
+; no need to enclose those setting names or values in
+; quotation-marks. Actually a quotation-mark would be seen as
+; part of the value! Everything right of the equal-sign is
+; considered to be the value of the setting.
+;
+; openacoon.config.default ist processed first, followed by
+; openacoon.config. Therefore any settings in openacoon.config will
+; overwrite the settings made in openacoon.config.default.
+
+
+
+; This sets the user-agent that the robot reports to the server.
+; The robots.txt handling in RobotsTxt.pas will check the server's
+; robots.txt for disallows for this user-agent and for any
+; user-agent with "acoon" (case-independent) in its name.
+; Settings for user-agent "*" will of course also be checked in
+; robots.txt
+
+robot.useragent=Mozilla/5.0 (compatible; OpenAcoon/4.12.0)
+
+
+
+; This setting determines how many URLs PrepareRobot will allow
+; for every hostname. Setting this to a low value will cause a
+; more widespread crawl, while a high setting will allow
+; extensive websites to be crawled more quickly.
+; NOTE: Setting this to a high value while simultaniously
+; instructing PrepareRobot to a low overall maximum number of
+; URLs may cause access-patterns similar to Denial-Of-Service
+; attacks! This may be caused by a high-percentage of URLs
+; belonging to a single host.
+
+robot.MaxUrlsPerHost=5
+
+; The CountMaxUrlsPerPart setting influences how the above
+; MaxUrlsPerHost ist counted. If set to "false" (the default),
+; then that count is global over the whole database. If set
+; to "true", then the count is done individually for each  of
+; the currently 64 partial databases. As the above setting: Use
+; with care and THINK about what are doing if you enable this!
+
+robot.CountMaxUrlsPerPart=false
+
+
+; The following setting determines which languages are indexed.
+; Possible settings are currently only "de" or "all".
+
+index.language=all
+
+
+
+; The index.max-page-size setting determines the maximum size
+; of a page. Pages larger than this will not be indexed.
+
+index.max-page-size=1000000
+
+
+
+
+; The following setting determines if ImportData loads whole parts
+; of the URL-database into memory. Only set this to true if you
+; have lots of RAM.
+
+ImportData.UseUrlPreload=true
+
+
+
+; --------------------------------------------------------------------
+; The "file-system" settings determine where certain data is
+; stored on disk. The default structure is that everything is
+; stored in the DATA-subdirectory of the main directory.
+; However it can be VERY beneficial for performance if every
+; file that the Robot uses is put on a different partition -
+; or even better - on a different physical disk.
+
+
+
+; Urls to be added to the URL-database.
+; !!! BEWARE !!! If you change this setting you will also need to
+; change the CleanUrlsTxt-command in OpenAcoon.Bat accordingly!
+
+file-system.Urls=data\txt\urls.txt
+
+
+
+; Urls to be added to the URL-database. These URLs were supposedly
+; added by users via a AddUrl-function on a website.
+
+file-system.AddUrl=data\txt\addurl.txt
+
+
+
+; IgnorePages contains URLs to be ignored. For example because
+; they don't exist or access is denied.
+
+file-system.IgnorePages=data\txt\ignorepages.txt
+
+
+
+; The UrlList contains all the URLs that the robot should crawl.
+
+file-system.UrlList=data\txt\robot.url
+
+
+
+; The IgnoreHosts contains a list of hosts and domains that the
+; software shall ignore.
+
+file-system.IgnoreHosts=data\txt\ignorehosts.txt
+
+
+
+; The next settings define the location of the URL-Database,
+; Raw(Info)-Database and Keyword-Database as well as the location
+; of the the BitTable whoch is used by the URL-Database
+
+file-system.UrlDb=data\db2.url
+file-system.InfDb=data\db2.inf
+file-system.KeyDb=data\db2.key
+
+
+
+; The following settings are primarily by the Robot/Parser combo.
+; The Robot saves files in InPath, the Parser reads these and
+; puts its output in ParsedPath. OpenAcoon.bat move these to
+; ImportPath from where ImportData reads them.
+; SpeedTrap is used by the Parser to indicate to the Robot that
+; it can't process the files at the current speed and that the
+; Robot should slow down.
+; !!! BEWARE !!! If you change the ParsedPath and/or ImportPath
+; settings, then you also need to change the Move-command in
+; OpenAcoon.bat accordingly!
+
+file-system.InPath=data\crawler\in\
+file-system.ParsedPath=data\crawler\parsed\
+file-system.ImportPath=data\crawler\import\
+file-system.SpeedTrap=data\crawler\speedtrap.dat
+
+
+
+; The next two settings are used by GenDb. SDataPath is the
+; directory where GenDb places the newly generated index.
+; TempPath is where GenDb stores its temp-files. Please be
+; aware that GenDb does NOT delete the temp-files when it's
+; done!
+file-system.SDataPath=data\sdata1\
+file-system.TempPath=data\tmp\
+
+
+
+; The file-system.Search settings are used in the SearchServer.
+; TempDir is where search-requests and completed searches are saved.
+; The SearchServer saved information about searches that take more
+; than 5 seconds in LogFile.
+; FirstPath and SecondPath are where the indices are saved.
+; SearchServer determines from the date of the file "ready.dat"
+; which one is newer and automatically used that one. This check is
+; repeated almost any second, so the switchover happens pretty quickly.
+file-system.Search.TempDir=data\search\
+file-system.Search.LogFile=data\search.log
+file-system.Search.FirstPath=data\sdata1\
+file-system.Search.SecondPath=data\sdata2\
+
+
