@@ -52,14 +52,20 @@ move /Y *.exe ..\bin
 del *.dcu
 
 echo .
-echo Build was successful !
+echo +++++++++++++++++++++++++
+echo +                       +
+echo + Build was successful! +
+echo +                       +
+echo +++++++++++++++++++++++++
 
 goto Done
 
 :Error
-echo *************************
-echo * Error during compile! *
-echo *************************
+echo -------------------------
+echo -                       -
+echo - Error during compile! -
+echo -                       -
+echo -------------------------
 
 :Done
 cd ..
