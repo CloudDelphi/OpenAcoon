@@ -39,13 +39,12 @@ type
         TiCount: int64;
         Buffer: tMemoryBuffer;
         ThisLink: shortstring;
-        // Freq, StartTime: int64;
         Url, OrgUrl: AnsiString;
         InTag, InTitle, InBody, InLink, InHRef, InAnchor, SomewhereInAnchor: boolean;
         InScript, InStyle: boolean;
         InMeta, InName, InContent, MetaActive, InComment: boolean;
         InBase, InBaseHRef, InBaseLink: boolean;
-        liWoerter, liLinks: tStringList;
+        liWords, liLinks: tStringList;
         MetaName, MetaContent: shortstring;
         MetaDescription, MetaRobots,
         MetaLanguage, MetaContentLanguage, MetaDCLanguage: shortstring;
@@ -60,16 +59,12 @@ type
         procedure ProcessSubFiles(FNam: string);
         procedure DeleteIfEmpty(FNam: string);
         procedure WriteBackLink(FromUrl, ToUrl, LinkText: shortstring);
-        // procedure StartTimer;
-        // procedure EndTimer;
         function GetCharacter: shortstring;
         procedure HandleInTag;
         procedure AddNewLink(AddThisLink: shortstring);
     end;
 
 
-
-// procedure MakeFlatUrl(var s: shortstring);
 
 implementation
 
@@ -84,7 +79,6 @@ uses
     FileLocation,
     Words,
     Logging,
-    // IdGlobal,
     CacheFile,
     DbTypes;
 
@@ -156,9 +150,9 @@ begin
     MaxBufLen := AMaxBufLen;
     IndexLanguage := Language;
     GetMem(TxtBuf, MaxBufLen);
-    liWoerter := tStringList.Create;
-    liWoerter.Sorted := true;
-    liWoerter.Duplicates := dupIgnore;
+    liWords := tStringList.Create;
+    liWords.Sorted := true;
+    liWords.Duplicates := dupIgnore;
     liLinks := tStringList.Create;
     liLinks.Sorted := true;
     liLinks.Duplicates := dupIgnore;
@@ -299,7 +293,7 @@ begin
                 end;
             end;
 
-            { Check for Timeouts }
+            // Check for Timeouts
             if s = 'File transfer timed-out.' then
             begin
                 // DeleteFile(FNam);
@@ -320,7 +314,7 @@ begin
                         end;
                 else
                     begin
-                        { Check for Ignores }
+                        // Check for Ignores
                         if (s = '#ignore') then
                         begin
                             WriteLn(Ignores, OrgUrl);
@@ -328,7 +322,7 @@ begin
                         end
                         else
                         begin
-                            { Check for Relocates }
+                            // Check for Relocates
                             ThisFilePos := 0;
                             ReadLnFromFile(s);
                             ReadLnFromFile(s);
@@ -354,42 +348,42 @@ begin
                                         exit;
                                     end
                                     else if LowerCase(copy(s, 1, 7)) = 'https://' then
-                                        begin
+                                    begin
                                         Delete(s, 1, 8);
-                                    if copy(s, 1, 1) = '/' then
-                                        s := copy(Url, 1, Pos('/', Url) - 1) + s;
-                                    WriteLn(Redirects, OrgUrl);
-                                    WriteLn(Redirects, s);
-                                    exit;
-                                end
-                                else
-                                begin
-                                    s2 := OrgUrl;
-                                    if copy(s, 1, 1) = '/' then i := Pos('/', s2) - 1
+                                        if copy(s, 1, 1) = '/' then
+                                            s := copy(Url, 1, Pos('/', Url) - 1) + s;
+                                        WriteLn(Redirects, OrgUrl);
+                                        WriteLn(Redirects, s);
+                                        exit;
+                                    end
                                     else
                                     begin
-                                        i := Length(s2);
-                                        while (i > 0) and (s2[i] <> '/') do
-                                            Dec(i);
+                                        s2 := OrgUrl;
+                                        if copy(s, 1, 1) = '/' then i := Pos('/', s2) - 1
+                                        else
+                                        begin
+                                            i := Length(s2);
+                                            while (i > 0) and (s2[i] <> '/') do
+                                                Dec(i);
+                                        end;
+                                        s2 := copy(s2, 1, i);
+                                        WriteLn(Redirects, OrgUrl);
+                                        WriteLn(Redirects, s2 + s);
+                                        exit;
                                     end;
-                                    s2 := copy(s2, 1, i);
-                                    WriteLn(Redirects, OrgUrl);
-                                    WriteLn(Redirects, s2 + s);
-                                    exit;
                                 end;
                             end;
                         end;
-                    end;
 
+                    end;
                 end;
             end;
+        except
         end;
     except
     end;
-except
-end;
 
-Result := true;
+    Result := true;
 end;
 
 
@@ -423,23 +417,22 @@ begin
     ReWrite(Backlinks);
 end;
 
+
+
 function tParserClass.GetCharacter: shortstring;
 var
     s: shortstring;
     c: AnsiChar;
     c2: AnsiChar;
 begin
-        // c := Buf[Posi - 1];
     c := Buffer.GetCurrentCharacter;
     if c = '&' then
     begin
         s := Buffer.PeekAhead(5);
         c2 := s[1];
         s[1] := 'x';
-            // Delete(s, 1, 1);
         if s = 'xuml;' then
         begin
-                // case Buf[Posi] of
             case c2 of
                 'a': c := 'ä';
                 'o': c := 'ö';
@@ -448,43 +441,35 @@ begin
                 'O': c := 'Ö';
                 'U': c := 'Ü';
             end;
-                // Inc(Posi, 5);
             Buffer.Advance(5);
         end
         else
         begin
-                // MakeLeftCopy(6, s);
             s := Buffer.PeekAhead(6);
             if s = 'szlig;' then
             begin
                 c := 'ß';
-                    // Inc(Posi, 6);
                 Buffer.Advance(6);
             end
             else
             begin
-                    // MakeLeftCopy(4, s);
                 s := Buffer.PeekAhead(4);
                 if s = 'amp;' then
                 begin
                     c := '&';
-                        // Inc(Posi, 4);
                     Buffer.Advance(4);
                 end
                 else if s = 'reg;' then
                 begin
                     c := '®';
-                        // Inc(Posi, 4);
                     Buffer.Advance(4);
                 end
                 else
                 begin
-                        // MakeLeftCopy(5, s);
                     s := Buffer.PeekAhead(5);
                     if s = 'copy;' then
                     begin
                         c := '©';
-                            // Inc(Posi, 5);
                         Buffer.Advance(5);
                     end
                     else if s = 'nbsp;' then
@@ -495,7 +480,7 @@ begin
                 end;
             end;
         end;
-    end; { if c='&' }
+    end; // if c='&'
 
     Result := c;
     case c of
@@ -507,8 +492,6 @@ begin
         'Ü': Result := 'Ue';
         'ß': Result := 'ss';
     end;
-
-        // Result := s;
 end;
 
 
@@ -516,7 +499,6 @@ procedure tParserClass.HandleInTag;
 var
     StrPosi: integer;
 begin
-    // StartTimer;
     if InLink and (((c = '"') and (Length(ThisLink) > 1)) or
     (c = ' ') or (c = '>')) then
     begin
@@ -536,7 +518,6 @@ begin
         end;
     end;
 
-        // Ti2 := Ticks;
     if InLink and (Length(ThisLink) < 255) then
     begin
         Inc(ThisLink[0]);
@@ -695,8 +676,8 @@ var
 
     procedure AddToWordList(const s: shortstring; const Flags: shortstring);
     begin
-        if (s <> '') and (not IsFillWord(s)) and (liWoerter.Count < cMaxKeywords) then
-            liWoerter.Add( (* Flags + *) s);
+        if (s <> '') and (not IsFillWord(s)) and (liWords.Count < cMaxKeywords) then
+            liWords.Add( (* Flags + *) s);
     end;
 
 
@@ -722,7 +703,7 @@ var
             exit;
         end;
 
-        // liWoerter.Clear;
+        // liWords.Clear;
         // liLinks.Clear;
 
 
@@ -971,10 +952,8 @@ begin
         LogMsg('parser.log', 'Empty URL. ThisFileSize=' + IntToStr(ThisFileSize) +
         ' ThisFilePos=' + IntToStr(ThisFilePos));
 
-    // Posi := 1;
     Buffer.Seek(0);
     Inc(TiCount);
-    // StartTimer;
     while not Buffer.Eof do
     begin
         if InComment then
@@ -984,8 +963,6 @@ begin
                 InComment := false;
         end;
 
-        // c := Buf[Posi];
-        // Inc(Posi);
         c := Buffer.GetCurrentCharacter;
         case c of
             '<': HandleTagOpening;
@@ -994,11 +971,6 @@ begin
             begin
                 if InTag then
                 begin
-                    // StartTimer;
-                    // HandleInTag;
-
-
-
                     if InLink and (((c = '"') and (Length(ThisLink) > 1)) or
                     (c = ' ') or (c = '>')) then
                     begin
@@ -1018,7 +990,6 @@ begin
                         end;
                     end;
 
-        // Ti2 := Ticks;
                     if InLink and (Length(ThisLink) < 255) then
                     begin
                         Inc(ThisLink[0]);
@@ -1084,8 +1055,6 @@ begin
                     else if InContent and (Length(MetaContent) < 254) then
                         MetaContent := MetaContent + GetCharacter;
 
-        // MakeLeftCopy(8, s);
-        // s := Buffer.PeekAhead(8);
                     if InMeta and (not InName) and (not InContent) and
                     (Buffer.LowerPeekAhead((8)) = 'content=') then
                     begin
@@ -1093,8 +1062,6 @@ begin
                         MetaActive := false;
                     end;
 
-        // MakeLeftCopy(11, s);
-        // s := Buffer.PeekAhead(11);
                     if InMeta and (not InName) and (not InContent) and
                     (Buffer.LowerPeekAhead(11) = 'http-equiv=') then
                     begin
@@ -1102,8 +1069,6 @@ begin
                         MetaActive := false;
                     end;
 
-        // MakeLeftCopy(5, s);
-        // s := Buffer.LowerPeekAhead(5);
                     if InMeta and (not InName) and (not InContent) and
                     (Buffer.LowerPeekAhead(5) = 'name=') then
                     begin
@@ -1124,23 +1089,15 @@ begin
                         InBaseLink := true;
                         ThisBaseLink := '';
                     end;
-
-
-
-// EndTimer;
                 end
                 else
                 begin
-                    // Ti2 := Ticks;
                     HandleRegularCharacter;
-                    // Inc(TiSum, Ticks - Ti2);
                 end;
             end;
         end;
         Buffer.Advance(1);
     end;
-    // EndTimer;
-    // Write(#13'          ', 0.001 * TiSum / TiCount:4:2, 'ms');
 
 
     s2 := LowerCase(Trim(copy(Title, 1, 255)));
@@ -1156,9 +1113,6 @@ begin
         end;
         Delete(s2, 1, 1);
         AddToWordList(s, '1');
-        (* if (liWoerter.Count < cMaxKeyWords) and (liWoerter.IndexOf(s) = -1) and
-          (not IsFillWord(s)) and (s <> '') then
-              liWoerter.Add(s); *)
     end;
 
     (*
@@ -1212,11 +1166,8 @@ begin
             if not GermanPage then
                 if IsGerman(ThisWord) then GermanPage := true;
             AddToWordList(ThisWord, '0');
-            (* if (liWoerter.Count < cMaxKeyWords) and (liWoerter.IndexOf(ThisWord) = -1) and
-              (not IsFillWord(ThisWord)) and (ThisWord <> '') then
-                  liWoerter.Add(ThisWord); *)
         end;
-        // if liWoerter.Count >= cMaxKeyWords then break;
+        // if liWords.Count >= cMaxKeyWords then break;
     end;
 
     i := 1;
@@ -1248,9 +1199,9 @@ begin
                 if IsGerman(ThisWord) then GermanPage := true;
 
             AddToWordList(ThisWord, '0');
-            (* if (liWoerter.Count < cMaxKeyWords) and (liWoerter.IndexOf(ThisWord) = -1) and
+            (* if (liWords.Count < cMaxKeyWords) and (liWords.IndexOf(ThisWord) = -1) and
               (not IsFillWord(ThisWord)) and (ThisWord <> '') then
-                  liWoerter.Add(ThisWord); *)
+                  liWords.Add(ThisWord); *)
         end;
     end;
 
@@ -1301,11 +1252,11 @@ begin
 
         WriteLn(fOutput, '0'); { Last-Modified Date !!! }
 
-        KeyAn := liWoerter.Count;
+        KeyAn := liWords.Count;
         // if KeyAn>cMaxKeyWords then KeyAn:=cMaxKeyWords;
         WriteLn(fOutput, KeyAn);
         for i := 0 to KeyAn - 1 do
-            WriteLn(fOutput, LowerCase(liWoerter.Strings[i]));
+            WriteLn(fOutput, LowerCase(liWords.Strings[i]));
 
         if FollowLinks and (Pos('nofollow', LowerCase(MetaRobots)) = 0) then
         begin
@@ -1324,9 +1275,9 @@ begin
         WriteLn(fOutput, OrgUrl);
     end;
 
-    liWoerter.Clear;
+    liWords.Clear;
     liLinks.Clear;
-    // liWoerter.Free;
+    // liWords.Free;
     // liLinks.Free;
 end;
 
@@ -1442,22 +1393,6 @@ begin
     {$endif}
 end;
 
-{
-procedure tParserClass.StartTimer;
-begin
-    QueryPerformanceFrequency(Freq);
-    QueryPerformanceCounter(StartTime);
-end;
-
-
-procedure tParserClass.EndTimer;
-var
-    EndTime: int64;
-begin
-    QueryPerformanceCounter(EndTime);
-    Inc(TiSum, EndTime - StartTime);
-end;
-}
 
 
 end.
