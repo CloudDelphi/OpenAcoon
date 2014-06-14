@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Search-Results</title>
+
+<style type="text/css">
+body {background: white;text-align: center;font-family: sans-serif;}
+.viewwidth {padding: 0;width: 960px;display: inline-block;text-align: center;}
+.main-area {width: 100%;text-align: center;color: #404040;}
+.searchbar {background: #fff8ed;margin-top: 2.0em;margin-bottom: 2.0em;padding: 20px 2em 18px 2em;font-size: 1.5em;
+    display: inline-block;-moz-border-radius: 8px;border-radius: 8px;border: 1px solid #f39c12;
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.2);width: 600px;}
+.searchbar p {font-size: 14px;max-width: 500px;text-align: left;line-height: 16px;margin-top: 10px;}
+.searchform input {font-size: 0.7em;border: solid 1px #ccc;padding: 0.25em 0.7em 0.3em 0.7em;
+    -moz-border-radius: 1.0em;border-radius: 1.0em;}
+.searchform input[type="submit"] {color: white;color: black;border: 0px solid white;padding: 0.3em 1.0em 0.3em 1.0em;
+    -moz-border-radius: 1.0em;border-radius: 1.0em;font-size: 0.65em;margin-left: 0.5em;}
+.searchform input[type="submit"]:hover {background: black;color: white;}
+.search-text {display: inline-block;}
+.search-input {display: inline-block;}
+.results {text-align: left;display: inline-block;font-size: 14px;width: 700px;}
+.results p {margin-bottom: 0.2em;}
+.results p a {color: blue;}
+.result {vertical-align: top;margin-top: 2.0em;text-align: left;line-height: 1.1em;color: #777;font-size: 1.25em;}
+.result_indent {padding-left: 50px;}
+.result_url {color: #00a000;font-size: 0.9em;}
+.result_snippet {font-size: 0.9em;letter-spacing: -0.02em;color: #666;}
+.result a {font-size: 1.3em;line-height: 1.0em;color: black;}
+.results_navbar {margin: 1.5em 0;font-size: 1.5em;}
+.more_results {font-size: 0.7em;}
+.more_results a {color: #0000c0;}
+</style>
+
+</head><body>
+
+<div class="searchbar">
+	<form method="get" class="searchform" action="/cgi/query.exe">
+	<div class="search-text">Keyword(s):</div>
+	<div class="search-input"><input type="text" maxlength="200" size="30" name="q" id="s" value="###Query###" />
+	<input type="submit" class="submit" value="Search" id="searchsubmit" /></div>
+	</form>
+</div>
+
+
+<div class="main-area"><div class="viewwidth">
+###Results###
+</div></div> <!-- viewwidth, main-area -->
+
+
+</body>
+</html>

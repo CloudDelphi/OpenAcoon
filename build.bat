@@ -9,7 +9,7 @@
 @rem need changes to the source-code and/or the compiler-options.
 
 @echo off
-set Compiler=dcc64 -W-IMPLICIT_STRING_CAST -W- -H- -$O+ -B -Q -ASysUtils=System.SysUtils;Windows=WinAPI.Windows;Classes=System.Classes;StrUtils=System.StrUtils;SyncObjs=System.SyncObjs;Forms=VCL.Forms;Messages=WinAPI.Messages;Graphics=VCL.Graphics;Controls=VCL.Controls;Dialogs=VCL.Dialogs;Spin=VCL.Samples.Spin;ExtCtrls=Vcl.ExtCtrls;StdCtrls=VCL.StdCtrls;ScktComp=System.Win.ScktComp;Types=System.Types;IoUtils=System.IOUtils;WinSock=WinAPI.WinSock
+set Compiler=dcc64 -W-IMPLICIT_STRING_CAST -W- -H- -$O+ -B -Q -ASysUtils=System.SysUtils;Windows=Winapi.Windows;Classes=System.Classes;StrUtils=System.StrUtils;SyncObjs=System.SyncObjs;Forms=VCL.Forms;Messages=WinAPI.Messages;Graphics=VCL.Graphics;Controls=VCL.Controls;Dialogs=VCL.Dialogs;Spin=VCL.Samples.Spin;ExtCtrls=Vcl.ExtCtrls;StdCtrls=VCL.StdCtrls;ScktComp=System.Win.ScktComp;Types=System.Types;IoUtils=System.IOUtils;WinSock=WinAPI.WinSock
 
 @rem Make sure the "bin" directory exists
 md bin
@@ -48,24 +48,23 @@ if errorlevel 1 goto Error
 %Compiler% SearchServer.dpr
 if errorlevel 1 goto Error
 
+%Compiler% cgi\query.dpr
+if errorlevel 1 goto Error
+
 move /Y *.exe ..\bin
 del *.dcu
+move /Y cgi\*.exe ..\bin
+del cgi\*.dcu
 
 echo .
-echo +++++++++++++++++++++++++
-echo +                       +
-echo + Build was successful! +
-echo +                       +
-echo +++++++++++++++++++++++++
+echo Build was successful !
 
 goto Done
 
 :Error
-echo -------------------------
-echo -                       -
-echo - Error during compile! -
-echo -                       -
-echo -------------------------
+echo *************************
+echo * Error during compile! *
+echo *************************
 
 :Done
 cd ..
