@@ -1,0 +1,2 @@
+add 1.20 http://twitter.com/ Twitter^Instantly connect to what's most important to you. Follow your friends, experts, favorite celebrities, and breaking news.
+add 1.01 http://de.wikipedia.org/wiki/Twitter Twitter - Wikipedia^Twitter (englisch fuer Gezwitscher) ist eine digitale Echtzeit-Anwendung zum Mikroblogging (zur Verbreitung von telegrammartigen Kurznachrichten

@@ -1,0 +1,1 @@
+add 1.1 http://www.acoon.de/ Acoon.de - Suchmaschine mit gutem Datenschutz^Acoon speichert keine IP-Adressen. Die gesamte Webseite wird per HTTPS/SSL verschluesselt um Ihre Suchabfragen vor Ausspaehung zu schuetzen.

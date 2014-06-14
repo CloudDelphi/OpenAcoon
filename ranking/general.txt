@@ -1,0 +1,16 @@
+host en.wikipedia.org 2.0
+tld pl 0.1
+tld cz 0.1
+tld hu 0.1
+tld ru 0.1
+tld cn 0.1
+tld fr 0.9
+tld it 0.8
+tld es 0.9
+tld gr 0.8
+tld ro 0.9
+tld be 0.9
+tld dk 0.9
+tld sk 0.9
+tld pt 0.1
+tld ae 0.1

@@ -1,0 +1,2 @@
+host www.apple.com 1.1
+url www.apple.com/de/iphone/ 1.8

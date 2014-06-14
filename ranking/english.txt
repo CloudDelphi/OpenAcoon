@@ -1,0 +1,6 @@
+tld de 0.9
+tld at 0.9
+tld ch 0.9
+tld com 1.1
+tld net 1.09
+tld org 1.08

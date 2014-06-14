@@ -1,0 +1,1 @@
+host www.mozilla.org 4

@@ -1,0 +1,4 @@
+tld de 1.13
+tld at 1.12
+tld ch 1.11
+host de.wikipedia.org 2.5
