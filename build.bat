@@ -57,14 +57,20 @@ move /Y cgi\*.exe ..\bin
 del cgi\*.dcu
 
 echo .
-echo Build was successful !
+echo ++++++++++++++++++++++++++
+echo +                        +
+echo + Build was successful ! +
+echo +                        +
+echo ++++++++++++++++++++++++++
 
 goto Done
 
 :Error
-echo *************************
-echo * Error during compile! *
-echo *************************
+echo +-----------------------+
+echo !                       !
+echo ! Error during compile! !
+echo !                       !
+echo +-----------------------+
 
 :Done
 cd ..

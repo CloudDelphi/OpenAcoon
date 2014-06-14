@@ -43,9 +43,22 @@ ChangeLog:
 interface
 
 uses
-    Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-    StdCtrls, ExtCtrls,
-    IdBaseComponent, IdComponent, IdCustomTCPServer, IdCustomHTTPServer, IdHTTPServer, idContext,
+    Windows,
+    Messages,
+    SysUtils,
+    Classes,
+    Graphics,
+    Controls,
+    Forms,
+    Dialogs,
+    StdCtrls,
+    ExtCtrls,
+    IdBaseComponent,
+    IdComponent,
+    IdCustomTCPServer,
+    IdCustomHTTPServer,
+    IdHTTPServer,
+    idContext,
     DomainRank;
 
 type
@@ -77,7 +90,6 @@ type
         AResponseInfo: TIdHTTPResponseInfo);
     private
     { Private declarations }
-    // DomainRanking: tDomainRank;
     public
     { Public declarations }
     end;
@@ -89,21 +101,32 @@ var
 implementation
 
 uses
-    Hash, CacheFile, GlobalTypes, FileLocation, DbTypes, SyncObjs, Words;
+    Hash,
+    CacheFile,
+    GlobalTypes,
+    FileLocation,
+    DbTypes,
+    SyncObjs,
+    Words;
 
 {$R *.DFM}
 
 
 const
-    cMaxKeywords = 10; { Es werden maximal x Keywords pro Suchabfrage bearbeitet }
-    cMaxTempPages = 32768; { Buffergroesse fuer die Bearbeitung der Suchabfragen }
-    cMaxPages = 10 * 1000 * 1000; { Reicht für 640 Mio Seiten }
+    cMaxKeywords = 10; // This defines the maximum number of keywords per query
+    cMaxTempPages = 32768; // Size of read-buffer used during query-processing
+
+    cMaxPagesPerShard = 10 * 1000 * 1000;
+    // Number of shards is defined in dbtypes.pas -> cDbCount
+    // 10 million is enough for 1.28 billion pages when used with the default
+    // number of 128 shards. You can set this pretty high without adverse
+    // consequences, as the actual memory-allocation is only the amount that
+    // is really needed.
+
     cMaxCachedResults = 64 * 1024 - 1;
-    cMaxRWIWorkChunkSize = 250000;
-    cMaxRWIWorkThreadCount = 16;
 
 type
-    tFilter = array [0 .. cMaxPages] of byte;
+    tFilter = array [0 .. cMaxPagesPerShard] of byte;
     pFilter = ^tFilter;
     tBitField = array [0 .. 10 * 1000 * 1000] of int32; { Reicht für ca. 2,5 Mrd. Seiten }
     pBitField = ^tBitField;
@@ -129,14 +152,6 @@ type
 
     pRWIWorkChunk = ^tRWIWorkChunk;
 
-    tProcessRWIThread = class(tThread)
-    private
-        RWIWorkChunk: pRWIWorkChunk;
-    protected
-        procedure Execute;
-    public
-        constructor Create(aRWIWorkChunk: pRWIWorkChunk);
-    end;
 
 var
     RankData: array [0 .. cDbCount - 1] of tRankDataArray;
@@ -193,26 +208,6 @@ var
     EarlyAbort: boolean;
 
 
-function LockCmpxchg32(CompareVal, NewVal: integer; AAddress: PInteger): integer;
-asm
-    {$IFNDEF CPUX64}
-    { On entry:
-    eax = CompareVal,
-    edx = NewVal,
-    ecx = AAddress }
-    lock cmpxchg [ecx], edx
-    {$ELSE}
-    .noframe
-    { On entry:
-    ecx = CompareVal,
-    edx = NewVal,
-    r8 = AAddress }
-    mov eax, ecx
-    lock cmpxchg [r8], edx
-    {$ENDIF}
-end;
-
-
 function LookupDomainRank(DocID: integer): integer; inline;
 begin
     Result := RankData[DocID and (cDbCount - 1)][DocID shr cDbBits];
@@ -224,117 +219,6 @@ begin
     Result := UrlData[DocID and (cDbCount - 1)][DocID shr cDbBits];
 end;
 
-
-// ---------------------------------------------------------------------------------
-
-
-constructor tProcessRWIThread.Create;
-begin
-    inherited Create(true);
-    RWIWorkChunk := aRWIWorkChunk;
-    FreeOnTerminate := false;
-    Start;
-end;
-
-
-procedure tProcessRWIThread.Execute;
-var
-    i: integer;
-    Action: tAction;
-    Data: uint32;
-    DbNr, Index: integer;
-    ThisRankValue, ThisValue: integer;
-    ThisRankFactor: double;
-    IndexShl: array [0 .. 31] of integer;
-begin
-(*
-    for i := 0 to 31 do
-        IndexShl[i] := 1 shl i;
-
-    Action := RWIWorkChunk.Action;
-    for i := 0 to High(RWIWorkChunk.RWIData) do
-    begin
-        Data := RWIWorkChunk.RWIData[i];
-        DbNr := (Data shr 3) and (cDbCount - 1);
-        Index := Data shr (3 + cDbBits);
-        if (AllLocations or (UrlOnly and ((Data and 4) <> 0)) or (TitleOnly and ((Data and 2) <> 0))) and
-        ((FilterMask = 0) or ((FilterMask <> 0) and ((FilterData[DbNr]^[Index] and FilterMask) <> 0))) then
-        begin
-
-            if ((Action = acAnd) and ((BitField[DbNr]^[Index shr 5] and IndexShl[Index and 31]) > 0)) or
-            (Action <> acAnd) then
-            begin
-                ThisValue := b1;
-                if (Data and 1) <> 0 then Inc(ThisValue, b2); // Keyword kommt in Beschreibung vor
-                if (Data and 2) <> 0 then Inc(ThisValue, b3); // Keyword kommt in Title vor
-                if (Data and 4) <> 0 then Inc(ThisValue, b4); // Keyword kommt in URL vor
-                fd := FilterData[DbNr]^[Index];
-                if (fd and 128) <> 0 then Inc(ThisValue, b5); // URL ist Domain-Root
-                if (fd and 64) <> 0 then Inc(ThisValue, b6);
-                if PreferDe and ((fd and 32) <> 0) then Inc(ThisValue, 10);
-                if PreferEn and ((fd and 32) = 0) then Inc(ThisValue, 10);
-                Inc(ThisValue, (31 - (fd and 31)) * b7);
-
-                ThisRankValue := LookupDomainRank((Index shl cDbBits) or DbNr) + 1;
-                ThisUrlData := LookupUrlData((Index shl cDbBits) or DbNr) + 1;
-                            // PathElements := (ThisUrlData shr 4) and 15;
-                HostElements := ThisUrlData and 15;
-
-                if ThisRankValue = 0 then ThisRankValue := 1000001;
-                ThisValue := Round((1.0 - ThisRankValue * 0.00000027) * ThisValue / HostElements);
-
-                if ThisValue > 65535 then ThisValue := 65535;
-            end;
-
-            case Action of
-                acSet:
-                    begin
-                        if KeyWordCount > 1 then
-                        begin
-                            Values[DbNr]^[Index] := ThisValue;
-                            Inc(BitField[DbNr]^[Index shr 5], IndexShl[Index and 31]);
-                        end
-                        else
-                        begin
-                            Inc(Count);
-                            if ThisValue > MaxValue then MaxValue := ThisValue;
-                            Inc(ValueTable[ThisValue]);
-                            if ValueTable[ThisValue] <= 1024 then
-                            begin
-                                ValueData[ThisValue, ValueTable[ThisValue]] :=
-                                (Index shl cDbBits) or DbNr;
-                            end;
-                        end;
-                    end;
-                acAnd:
-                    begin
-                        if (BitField[DbNr]^[Index shr 5] and IndexShl[Index and 31]) > 0 then
-                        begin
-                            TempBit := TempBitField[DbNr]^[Index shr 5];
-                            NewValue := Values[DbNr]^[Index] + ThisValue;
-                            if NewValue > 65535 then NewValue := 65535;
-                            Values[DbNr]^[Index] := NewValue;
-                            TempBitField[DbNr]^[Index shr 5] := TempBit + IndexShl[Index and 31];
-                        end;
-                    end;
-                acNot:
-                    begin
-                        BitField[DbNr]^[Index shr 5] := BitField[DbNr]^[Index shr 5] and
-                        (not IndexShl[Index and 31]);
-                    end;
-            end; { case Action of }
-        end; { Ist in Filtermask }
-    end;
-
-
-    // We're done. Release the memory
-    SetLength(RWIWorkChunk.RWIData, 0);
-
-*)
-end;
-
-
-// ---------------------------------------------------------------------------------
 
 
 function ReferenceRAMCaches: integer;
