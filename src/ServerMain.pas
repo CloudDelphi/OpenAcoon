@@ -417,15 +417,6 @@ begin
             end;
 
             Result := Data2;
-
-(* i:=j-1;
-      while i>1 do
-      begin
-        if ((Data[i]='+') and (Data[i-1]<>'+')) then
-          Data[i]:=' ';
-        Dec(i);
-      end; *)
-
             exit;
         end;
 
@@ -646,15 +637,6 @@ begin
         if ((BitField[DbNr]^[Index shr 5] and IndexShl[Index and 31]) > 0) then
         begin
             fd := FilterData[DbNr]^[Index];
-            (*
-            ThisValue := b1;
-            if (Data and 1) <> 0 then Inc(ThisValue, b2); // Keyword kommt in Beschreibung vor
-            if (Data and 2) <> 0 then Inc(ThisValue, b3); // Keyword kommt in Title vor
-            if (Data and 4) <> 0 then Inc(ThisValue, b4); // Keyword kommt in URL vor
-            if (fd and 128) <> 0 then Inc(ThisValue, b5); // URL ist Domain-Root
-            if (fd and 64) <> 0 then Inc(ThisValue, b6);
- *)
-
             ThisValue := BaseValue[(Data and 7) or ((fd shr 3) and 24)];
 
             if PreferDe and ((fd and 32) <> 0) then Inc(ThisValue, 10);
@@ -663,16 +645,9 @@ begin
 
             ThisRankValue := LookupDomainRank((Index shl cDbBits) or DbNr) + 1;
             ThisUrlData := LookupUrlData((Index shl cDbBits) or DbNr) + 1;
-                            // PathElements := (ThisUrlData shr 4) and 15;
             HostElements := ThisUrlData and 15;
 
             if ThisRankValue = 0 then ThisRankValue := 1000001;
-
-                            (* ThisRankFactor := 1.0 - (ThisRankValue / 1100000) * 0.3;
-                            ThisValue := Round(1.0 * ThisValue * ThisRankFactor); *)
-                            // ThisValue := Round(ThisValue * (1.0 / PathElements));
-                            (* ThisValue := Round(ThisValue * (1.0 / HostElements)); *)
-
 
             ThisValue := Round((1.0 - ThisRankValue * 0.000000027) * ThisValue / HostElements);
 
@@ -687,15 +662,16 @@ begin
             TempBitField[DbNr]^[Index shr 5] := TempBit + IndexShl[Index and 31];
         end;
 
-    end; { For-Schleife }
+    end; { For }
 end;
+
 
 
 function FindKeyWordResultCountForHost(ThisKey: shortstring): integer;
 begin
-    // AppendToLog('Optimizer: FindKeyWordResultCountForHost "' + ThisKey + '"');
     Result := 0;
 end;
+
 
 
 function FindKeyWordResultCount(ThisKey: shortstring; KeywordNr: integer): integer;
@@ -773,14 +749,9 @@ begin
         if LowerCase(copy(ThisKey, 1, 3)) = 'www' then Insert('.', ThisKey, 4);
         if LowerCase(copy(ThisKey, Length(ThisKey) - 2, 3)) = 'com' then Insert('.', ThisKey, Length(ThisKey) - 2);
         if LowerCase(copy(ThisKey, Length(ThisKey) - 1, 2)) = 'de' then Insert('.', ThisKey, Length(ThisKey) - 1);
-        // AddToMemo('Changed to "' + ThisKey + '"');
-        // Result := FindKeyWordResultCountForHost(ThisKey);
-        // AddToMemo('Found '+IntToStr(Result)+' results');
-        // if Result > 0 then
         begin
             KeyWordIsHostName[KeywordNr] := true;
             KeyWords[KeywordNr] := 'host:' + ThisKey;
-            // AddToMemo('Changed keyword to "' + KeyWords[KeywordNr] + '"');
         end;
     end;
 end;
@@ -808,7 +779,6 @@ var
     PathElements, HostElements: byte;
     TopHitsPointer: int64;
 begin
-    // AppendToLog('Searching for keyword "' + ThisKey + '"');
     Ti4 := GetTickCount;
     Ti5 := 0;
     Ti6 := 0;
@@ -907,13 +877,11 @@ begin
         begin
             Keys.Read(An, 4);
             Keys.Read(TopHitsPointer, SizeOf(TopHitsPointer));
-            // AppendToLog('Found "' + ThisKey + '". ' + IntToStr(An) + ' document(s)');
 
             if (QueryPass = 1) and (TopHitsPointer <> -1) then
             begin
                 Fancy.Seek(TopHitsPointer);
                 Fancy.Read(An, 4);
-                // AppendToLog('Processing fancy-hits. ' + IntToStr(An) + ' document(s).');
             end;
 
             if (Action = acSet) and (not BitFieldInitialized) and (An > 0) then
@@ -958,12 +926,21 @@ begin
                             IndexShl[Index and 31]) > 0)) or (Action <> acAnd) then
                             begin
                                 ThisValue := b1;
+
+                                // Keyword exists in description
                                 if (Data and 1) <> 0 then Inc(ThisValue, b2);
-                                        // Keyword kommt in Beschreibung vor
-                                if (Data and 2) <> 0 then Inc(ThisValue, b3); // Keyword kommt in Title vor
-                                if (Data and 4) <> 0 then Inc(ThisValue, b4); // Keyword kommt in URL vor
+
+                                // Keyword is in title
+                                if (Data and 2) <> 0 then Inc(ThisValue, b3);
+
+                                // Keyword is in URL
+                                if (Data and 4) <> 0 then Inc(ThisValue, b4);
+
                                 fd := FilterData[DbNr]^[Index];
-                                if (fd and 128) <> 0 then Inc(ThisValue, b5); // URL ist Domain-Root
+
+                                // URL is domain-root ( = www.somedomain.com/ )
+                                if (fd and 128) <> 0 then Inc(ThisValue, b5);
+
                                 if (fd and 64) <> 0 then Inc(ThisValue, b6);
                                 if PreferDe and ((fd and 32) <> 0) then Inc(ThisValue, 10);
                                 if PreferEn and ((fd and 32) = 0) then Inc(ThisValue, 10);
@@ -971,15 +948,9 @@ begin
 
                                 ThisRankValue := LookupDomainRank((Index shl cDbBits) or DbNr) + 1;
                                 ThisUrlData := LookupUrlData((Index shl cDbBits) or DbNr) + 1;
-                            // PathElements := (ThisUrlData shr 4) and 15;
                                 HostElements := ThisUrlData and 15;
 
                                 if ThisRankValue = 0 then ThisRankValue := 1000001;
-
-                            (* ThisRankFactor := 1.0 - (ThisRankValue / 1100000) * 0.3;
-                            ThisValue := Round(1.0 * ThisValue * ThisRankFactor); *)
-                            // ThisValue := Round(ThisValue * (1.0 / PathElements));
-                            (* ThisValue := Round(ThisValue * (1.0 / HostElements)); *)
 
                                 Inc(ThisValue, Round(GetBackLinkValue(DbNr, Index)));
                                 ThisValue :=
@@ -1028,8 +999,8 @@ begin
                                         (not IndexShl[Index and 31]);
                                     end;
                             end; { case Action of }
-                        end; { Ist in Filtermask }
-                    end; { For-Schleife }
+                        end; { Is in Filtermask }
+                    end; { For-Loop }
                 end;
 
                 Dec(An, ThisAn);
@@ -1049,12 +1020,10 @@ begin
                 if TempBit = 0 then
                 begin
                     EarlyAbort := true;
-                    // AppendToLog('EarlyAbort triggered.');
                 end;
             end;
 
             Ti6 := GetTickCount - Ti5 - Ti4;
-            // AppendToLog('Done with processing "' + ThisKey + '".');
             exit;
         end;
         Keys.Read(An, 4);
@@ -1067,284 +1036,8 @@ begin
             FillChar(BitField[i]^, BitFieldSize[i] * 4, 0);
 
     Ti6 := GetTickCount - Ti5 - Ti4;
-    // AppendToLog('Done with processing "' + ThisKey + '".');
 end;
 
-
-procedure FindThisKeyThreaded(ThisKey: shortstring; Action: tAction);
-var
-    Keys, Fancy: ^tPreloadedFile;
-    HashCode: integer;
-    s: shortstring;
-    An: int32;
-    Po: int64;
-    i, An2, ThisAn: integer;
-    ThisValue, NewValue: integer;
-    DbNr, Index: integer;
-    Data: integer;
-    IndexShl: array [0 .. 31] of integer;
-    TempBit: integer;
-    fd: integer;
-    AllLocations, TitleOnly, UrlOnly: boolean;
-    ThisRankValue: integer;
-    ThisRankFactor: double;
-    ThisUrlData: byte;
-    PathElements, HostElements: byte;
-    TopHitsPointer: int64;
-begin
-    // AppendToLog('Searching for keyword "' + ThisKey + '"');
-    Ti4 := GetTickCount;
-    Ti5 := 0;
-    Ti6 := 0;
-
-    if (LowerCase(copy(ThisKey, 1, 5)) = 'host:') or
-    (LowerCase(copy(ThisKey, 1, 5)) = 'site:') then
-    begin
-        FindThisHost(copy(ThisKey, 6, 255), Action);
-        exit;
-    end;
-
-    if LowerCase(copy(ThisKey, 1, 4)) = 'www.' then
-    begin
-        FindThisHost(ThisKey, Action);
-        exit;
-    end;
-
-    if LowerCase(copy(ThisKey, Length(ThisKey) - 2, 3)) = '.de' then
-    begin
-        FindThisHost('www.' + ThisKey, Action);
-        exit;
-    end;
-
-    if LowerCase(copy(ThisKey, Length(ThisKey) - 3, 4)) = '.com' then
-    begin
-        FindThisHost('www.' + ThisKey, Action);
-        exit;
-    end;
-
-    AllLocations := true;
-    TitleOnly := false;
-    UrlOnly := false;
-    if LowerCase(copy(ThisKey, 1, 6)) = 'inurl:' then
-    begin
-        AllLocations := false;
-        UrlOnly := true;
-        Delete(ThisKey, 1, 6);
-    end
-    else
-    if LowerCase(copy(ThisKey, 1, 8)) = 'intitle:' then
-    begin
-        AllLocations := false;
-        TitleOnly := true;
-        Delete(ThisKey, 1, 8);
-    end;
-
-
-    for i := 0 to 31 do
-        IndexShl[i] := 1 shl i;
-
-    case Action of
-        acSet:
-            begin
-                BitFieldInitialized := false;
-                FillChar(ValueTable, SizeOf(ValueTable), 0);
-                if KeyWordCount > 1 then
-                begin
-                    for i := 0 to cDbCount - 1 do
-                        FillChar(BitField[i]^, BitFieldSize[i] * 4, 0);
-                    BitFieldInitialized := true;
-                end;
-            end;
-        acAnd:
-            begin
-                for i := 0 to cDbCount - 1 do
-                    FillChar(TempBitField[i]^, BitFieldSize[i] * 4, 0);
-            end;
-    end;
-
-    Ti5 := GetTickCount - Ti4;
-    HashCode := CalcCRC(ThisKey);;
-    Str(HashCode and 63, s);
-    Keys := @KeyDbs[HashCode and 63];
-    Fancy := @FancyDbs[HashCode and 63];
-    HashCode := (HashCode shr 6) and cMaxIndexHash;
-    if Length(s) < 2 then s := '0' + s;
-    FileMode := 0;
-
-    Keys.Seek(HashCode * 8);
-    Keys.Read(Po, 8);
-    Keys.Seek(Po);
-
-    while Po <> 0 do
-    begin
-        Keys.Read(s, 1);
-        if s = '' then
-        begin
-            if Action = acAnd then
-                for i := 0 to cDbCount - 1 do
-                    FillChar(BitField[i]^, BitFieldSize[i] * 4, 0);
-            Ti6 := GetTickCount - Ti5 - Ti4;
-            exit;
-        end;
-        Keys.Read(s[1], Length(s));
-        if s = ThisKey then
-        begin
-            Keys.Read(An, 4);
-            Keys.Read(TopHitsPointer, SizeOf(TopHitsPointer));
-            // AppendToLog('Found "' + ThisKey + '". ' + IntToStr(An) + ' document(s)');
-
-            if (QueryPass = 1) and (TopHitsPointer <> -1) then
-            begin
-                Fancy.Seek(TopHitsPointer);
-                Fancy.Read(An, 4);
-                // AppendToLog('Processing fancy-hits. ' + IntToStr(An) + ' document(s).');
-            end;
-
-            if (Action = acSet) and (not BitFieldInitialized) and (An > 0) then
-            begin
-                for i := 0 to cDbCount - 1 do
-                    FillChar(BitField[i]^, BitFieldSize[i] * 4, 0);
-                BitFieldInitialized := true;
-            end;
-
-            if KeyWordCount = 1 then
-            begin
-                MaxValue := 0;
-                BitFieldInitialized := false;
-            end;
-
-            while An > 0 do
-            begin
-                ThisAn := An;
-                if ThisAn > cMaxTempPages then ThisAn := cMaxTempPages;
-                if (QueryPass = 2) or (TopHitsPointer = -1) then
-                    Keys.Read(TempBuf, 4 * ThisAn)
-                else
-                    Fancy.Read(TempBuf, 4 * ThisAn);
-
-                for i := 1 to ThisAn do
-                begin
-                    Data := TempBuf[i];
-                    DbNr := (Data shr 3) and (cDbCount - 1);
-                    Index := Data shr (3 + cDbBits);
-                    if (AllLocations or (UrlOnly and ((Data and 4) <> 0)) or (TitleOnly and ((Data and 2) <> 0))
-                    ) and
-                    ((FilterMask = 0) or ((FilterMask <> 0) and ((FilterData[DbNr]^[Index] and FilterMask)
-                    <> 0))) then
-                    begin
-
-                        if ((Action = acAnd) and ((BitField[DbNr]^[Index shr 5] and IndexShl[Index and 31]) > 0)
-                        ) or
-                        (Action <> acAnd) then
-                        begin
-                            ThisValue := b1;
-                            if (Data and 1) <> 0 then Inc(ThisValue, b2); // Keyword kommt in Beschreibung vor
-                            if (Data and 2) <> 0 then Inc(ThisValue, b3); // Keyword kommt in Title vor
-                            if (Data and 4) <> 0 then Inc(ThisValue, b4); // Keyword kommt in URL vor
-                            fd := FilterData[DbNr]^[Index];
-                            if (fd and 128) <> 0 then Inc(ThisValue, b5); // URL ist Domain-Root
-                            if (fd and 64) <> 0 then Inc(ThisValue, b6);
-                            if PreferDe and ((fd and 32) <> 0) then Inc(ThisValue, 10);
-                            if PreferEn and ((fd and 32) = 0) then Inc(ThisValue, 10);
-                            Inc(ThisValue, (31 - (fd and 31)) * b7);
-
-                            ThisRankValue := LookupDomainRank((Index shl cDbBits) or DbNr) + 1;
-                            ThisUrlData := LookupUrlData((Index shl cDbBits) or DbNr) + 1;
-                            // PathElements := (ThisUrlData shr 4) and 15;
-                            HostElements := ThisUrlData and 15;
-
-                            if ThisRankValue = 0 then ThisRankValue := 1000001;
-
-                            (* ThisRankFactor := 1.0 - (ThisRankValue / 1100000) * 0.3;
-                            ThisValue := Round(1.0 * ThisValue * ThisRankFactor); *)
-                            // ThisValue := Round(ThisValue * (1.0 / PathElements));
-                            (* ThisValue := Round(ThisValue * (1.0 / HostElements)); *)
-
-
-                            ThisValue := Round((1.0 - ThisRankValue * 0.00000027) * ThisValue / HostElements);
-
-
-
-                            if ThisValue > 65535 then ThisValue := 65535;
-                        end;
-
-                        case Action of
-                            acSet:
-                                begin
-                                    if KeyWordCount > 1 then
-                                    begin
-                                        Values[DbNr]^[Index] := ThisValue;
-                                        Inc(BitField[DbNr]^[Index shr 5], IndexShl[Index and 31]);
-                                    end
-                                    else
-                                    begin
-                                        Inc(Count);
-                                        if ThisValue > MaxValue then MaxValue := ThisValue;
-                                        Inc(ValueTable[ThisValue]);
-                                        if ValueTable[ThisValue] <= 1024 then
-                                        begin
-                                            ValueData[ThisValue, ValueTable[ThisValue]] :=
-                                            (Index shl cDbBits) or DbNr;
-                                        end;
-                                    end;
-                                end;
-                            acAnd:
-                                begin
-                                    if (BitField[DbNr]^[Index shr 5] and IndexShl[Index and 31]) > 0 then
-                                    begin
-                                        TempBit := TempBitField[DbNr]^[Index shr 5];
-                                        NewValue := Values[DbNr]^[Index] + ThisValue;
-                                        if NewValue > 65535 then NewValue := 65535;
-                                        Values[DbNr]^[Index] := NewValue;
-                                        TempBitField[DbNr]^[Index shr 5] := TempBit + IndexShl[Index and 31];
-                                    end;
-                                end;
-                            acNot:
-                                begin
-                                    BitField[DbNr]^[Index shr 5] := BitField[DbNr]^[Index shr 5] and
-                                    (not IndexShl[Index and 31]);
-                                end;
-                        end; { case Action of }
-                    end; { Ist in Filtermask }
-                end; { For-Schleife }
-
-                Dec(An, ThisAn);
-            end; { while An>0 }
-
-            Ti5 := GetTickCount - Ti4;
-            if Action = acAnd then
-            begin
-                TempBit := 0;
-                for DbNr := 0 to cDbCount - 1 do
-                    for i := 0 to BitFieldSize[DbNr] - 1 do
-                    begin
-                        BitField[DbNr]^[i] :=
-                        BitField[DbNr]^[i] and TempBitField[DbNr]^[i];
-                        TempBit := TempBit or BitField[DbNr]^[i];
-                    end;
-                if TempBit = 0 then
-                begin
-                    EarlyAbort := true;
-                    // AppendToLog('EarlyAbort triggered.');
-                end;
-            end;
-
-            Ti6 := GetTickCount - Ti5 - Ti4;
-            // AppendToLog('Done with processing "' + ThisKey + '".');
-            exit;
-        end;
-        Keys.Read(An, 4);
-        Keys.Read(TopHitsPointer, SizeOf(TopHitsPointer));
-        Keys.Seek(Keys.FilePos + uint32(An) * 4);
-    end;
-
-    if Action = acAnd then
-        for i := 0 to cDbCount - 1 do
-            FillChar(BitField[i]^, BitFieldSize[i] * 4, 0);
-
-    Ti6 := GetTickCount - Ti5 - Ti4;
-    // AppendToLog('Done with processing "' + ThisKey + '".');
-end;
 
 
 procedure OptimizeQuery;
@@ -1401,7 +1094,6 @@ begin
         else KeyWordAction[i] := acNot;
 
         KeyWordResultCount[i] := FindKeyWordResultCount(ThisKey, i);
-        // AppendToLog('Optimizer: Found ' + IntToStr(KeyWordResultCount[i]) + ' results for keyword "' + ThisKey + '".');
     end;
 
     repeat
@@ -1414,10 +1106,6 @@ begin
             (KeyWordResultCount[i + 1] < KeyWordResultCount[i]) then SwapKeywords(i, i + 1);
         end;
     until not ChangesMade;
-
-    // AppendToLog('Optimizer: New keyword-order is:');
-    // for i := 1 to KeyWordCount do
-    // AppendToLog('"' + KeyWords[i] + '" ' + IntToStr(KeyWordResultCount[i]));
 end;
 
 
@@ -1533,20 +1221,15 @@ begin
 
     Html[DbNr].Position := UrlPo;
     Html[DbNr].Read(Url, 1 + cMaxUrlLength);
-  // WriteLn(f,'url=http://',Url);
     Li.Add('url=http://' + Url);
 
     Html[DbNr].Read(s, 1 + cMaxTitleLength);
-    if Trim(s) = '' then s := '(Ohne Titel)';
-  // WriteLn(f,'title=',s);
+    if Trim(s) = '' then s := '(Ohne Titel)'; // "Ohne Titel" is German for "Without a title"
     Li.Add('title=' + s);
 
     Html[DbNr].Read(s, 256);
     s := Trim(s);
-  // WriteLn(f,'text=',s);
-  // WriteLn(f,'rel=',100.0*Value/MaxValue:1:0);
     Li.Add('text=' + s);
-  // Li.Add('rel='+IntToStr(Round(100.0*Value/MaxValue)));
     Li.Add('rel=' + IntToStr(Value));
 
     Li.Add('domainrank=' + IntToStr(LookupDomainRank(DocID)));
@@ -1710,7 +1393,6 @@ begin
     Nr := 0;
 
 
-  // WriteLn(f,'TotalCount=',Count);
     Li.Add('TotalCount=' + IntToStr(Count));
     if (Count = 0) and (QueryPass = 2) then
     begin
@@ -1729,8 +1411,6 @@ begin
     EndWithNr := StartWithNr + ShowCount - 1;
     if EndWithNr > Count then EndWithNr := Count;
 
-  // WriteLn(f,'StartWith=',StartWithNr);
-  // WriteLn(f,'EndWith=',EndWithNr);
     Li.Add('StartWith=' + IntToStr(StartWithNr));
     Li.Add('EndWith=' + IntToStr(EndWithNr));
 
@@ -1745,7 +1425,6 @@ begin
             begin
                 j := ValueData[ThisValue, i];
                 if (QueryPass = 2) or (ResultCount >= 1000) then ShowLink(j, ThisValue, Nr, Li);
-        // ShowLink(j,Form1.DomainRanking.GetDomainRanking(GetURLbyDocumentID(j)),Nr,Li);
             end; { Show this link }
             if Nr >= EndWithNr then break;
         end;
@@ -1838,7 +1517,6 @@ var
     i, j: integer;
     NonMinusOne: integer;
 begin
-    // AddToMemo('NewPath=' + cSData);
     for i := 0 to 63 do
     begin
         KeyDbs[i] := tPreloadedFile.Create;
@@ -1919,9 +1597,6 @@ begin
         f.Free;
 
     end;
-
-    // AddToMemo('NonMinusOne=' + IntToStr(NonMinusOne));
-    // AddToMemo('MaxBackLinkCount=' + IntToStr(MaxBackLinkCount));
 end;
 
 
@@ -2020,7 +1695,6 @@ var
     Ti: dword;
 begin
     Inc(RefreshCachesCountdown);
-    // Form1.Label9.Caption:=IntToStr(RefreshCachesCountdown);
     if RefreshCachesCountdown >= 4000 then
     begin
         Ti := GetTickCount;
@@ -2106,13 +1780,10 @@ procedure OpenSnippetDatabases;
 var
     i: integer;
 begin
-    // AddToMemo('Opening Snippet database');
-    // FileMode := 0;
     for i := 0 to cDbCount - 1 do
     begin
         Html[i] := tFileStream.Create(cSData + 'urls.dat' + IntToStr(i), fmOpenRead or fmShareDenyNone);
     end;
-    // AddToMemo('Done Opening Snippet database');
 end;
 
 
@@ -2120,7 +1791,6 @@ procedure CloseSnippetDatabases;
 var
     i: integer;
 begin
-    // AddToMemo('Closing Snippet database');
     for i := 0 to cDbCount - 1 do
     begin
         Html[i].Free;
@@ -2172,15 +1842,7 @@ begin
     end;
 end;
 
-(*
-procedure NewHandleQuery;
-var
-    Query: TOAQuery;
-begin
-    Query:=TOAQuery.Create('berlin hotels');
-    Query.Free;
-end;
-*)
+
 
 procedure CheckForQueries;
 var
@@ -2212,13 +1874,6 @@ begin
             Delete(FNam, 1, 1);
 
             ReadQueryFromFile(FNam);
-
-
-                // Only for test-purposes !!!!
-                // NewHandleQuery;
-                // Only for test-purposes !!!!
-
-
             CreateOutputFile(FNam);
 
             Ti := GetTickCount;
@@ -2266,19 +1921,13 @@ begin
 
             DeleteFile(cSearchTempDir + 'a' + FNam);
             Code := FindNext(Sr);
-                // Application.ProcessMessages;
         finally
             CritSec.Leave;
         end;
     end;
     FindClose(Sr);
-        // Application.ProcessMessages;
-
-    // CheckDataPath;
 
     Sleep(10);
-    // until StopRequested;
-    // Form1.Close;
 
     Li.Free;
     if StopRequested then Form1.Close;
@@ -2337,13 +1986,6 @@ begin
     StopRequested := false;
     cSData := '';
     CheckDataPath;
-
-  (* DomainRanking:=tDomainRank.Create;
-  AddToMemo(IntToStr(DomainRanking.DomainCount)+' domains in DomainRanking');
-  AddToMemo(IntToStr(DomainRanking.GetDomainRanking('www.google.com'))+' für google.com');
-  AddToMemo(IntToStr(DomainRanking.GetDomainRanking('www.google.de'))+' für google.de');
-  AddToMemo(IntToStr(DomainRanking.GetDomainRanking('twitter.com'))+' für twitter.com');
-  AddToMemo(IntToStr(DomainRanking.GetDomainRanking('www.acoon.de'))+' für acoon.de'); *)
 end;
 
 
@@ -2353,7 +1995,6 @@ var
     Ti, Ti2, Ti3: int64;
     s: string;
     Li: tStringList;
-    // i: integer;
     rbs: RawByteString;
     u8: UTF8String;
     s2: string;
@@ -2388,9 +2029,6 @@ begin
         OrgRbs := rbs;
         u8 := rbs;
         s := AnsiLowerCase(u8);
-        (* AddToMemo(IntToStr(Length(s)));
-        for i:=1 to Length(s) do
-            AddToMemo(IntToStr(Ord(s[i]))); *)
         Begriff := '';
 
         while s <> '' do
@@ -2415,19 +2053,6 @@ begin
                 Delete(s, 1, 1);
             end;
         end;
-
-        (* for i:=1 to Length(s) do
-        begin
-            case s[i] of
-                'ä': Begriff:=Begriff+'ae';
-                'ö': Begriff:=Begriff+'oe';
-                'ü': Begriff:=Begriff+'ue';
-                'ß': Begriff:=Begriff+'ss';
-                else Begriff:=Begriff+s[i];
-            end;
-        end; *)
-
-
 
         FilterMask := 0;
         StartWithNr := ParseThisParameter(Req.Params.Values['startwith'], 1, 1, 991);
@@ -2499,12 +2124,13 @@ end;
 
 
 procedure TForm1.IdHTTPServer1CommandGet(AContext: TIdContext;
-ARequestInfo: TIdHTTPRequestInfo;
-AResponseInfo: TIdHTTPResponseInfo);
+    ARequestInfo: TIdHTTPRequestInfo;
+    AResponseInfo: TIdHTTPResponseInfo);
 begin
     if AnsiLowerCase(ARequestInfo.Document) = '/query.html' then
         SetupQuery(ARequestInfo, AResponseInfo);
 end;
+
 
 procedure TForm1.Button2Click(Sender: TObject);
 begin
@@ -2524,5 +2150,4 @@ begin
     MemoLines.Sorted := false;
     MemoLines.Duplicates := dupAccept;
     CritSec := tCriticalSection.Create;
-
 end.
