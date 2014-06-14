@@ -1277,8 +1277,6 @@ begin
 
     liWords.Clear;
     liLinks.Clear;
-    // liWords.Free;
-    // liLinks.Free;
 end;
 
 
