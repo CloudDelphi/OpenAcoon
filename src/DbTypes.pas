@@ -2,7 +2,7 @@ unit DbTypes;
 
 (*
     OpenAcoon - An OpenSource Internet-Search-Engine
-    Copyright (C) 1999-2008 Acoon GmbH
+    Copyright (C) 1999-2014 Acoon GmbH
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License version 2 as
@@ -51,12 +51,11 @@ const
 
 type
     tPriority = (prNormal,prIgnore);
-    {
-      prNormal = Jede andere Domain
-      prIgnore = Diese URL ignorieren. Wird gesetzt wenn es die Seite nicht
-            gibt, oder diese als nicht deutschsprachig erkannt wird. Außerdem
-            wenn der Server beim Zugriff ein Relocate (HTTP-Status 301 oder 302)
-            zurückgibt }
+    (*
+      prNormal = Everything is fine. This URL can be crawled or has already been crawled.
+      prIgnore = Ignore this URL. Will be set if the page does not exist or if
+                 the server returns a 301 or 302 relocation.
+    *)
     tUrlData = packed record // URL data-structure
         Next: int32; // File-position of next entry
         InfPo: int64; // This is set to -1 while the URL has not been crawled,
@@ -67,28 +66,27 @@ type
         Priority: tPriority;
         Url: string[cMaxUrlLength];
     end;
-    tKey = packed record // Datenstruktur für die Keyword-Datenbank
-        Next: int32; // Dateipointer auf den nächsten Listeneintrag
-        Key: shortstring;
-    end;
+
     tHit = packed record
         PageID: uint32;
         // PageID: Bit0=IsInDescription, Bit1=IsInTitle, Bit2=IsInURL
     end;
-    tPageInfo = packed record // Alle Infos zu einer erfassten WWW-Seite
-        Url: string[cMaxUrlLength]; // URL der Seite
-        Title: string[cMaxTitleLength]; // Überschrift (<title>-Abschnitt) der Seite
-        Description: shortstring; // Beschreibung der Seite. Die ersten 255
-                                  // Zeichen oder der Description Meta-Tag
-        WordCount: uint32; // Anzahl ALLER Wörter auf der Seite
-        Language: int8; { 0=Deutsch; -1=Unbekannt }
-        // Keys: array[1..cMaxKeywords] of tHit;
-        // Anschließend an diese Datenstruktur folgt für jedes Keyword eine
-        // THit-Datenstruktur
+
+    tPageInfo = packed record // All the info for a successfully crawled page
+        Url: string[cMaxUrlLength];
+        Title: string[cMaxTitleLength]; // <title>
+
+        Description: shortstring;
+        // Snippet. Limited to 255 characters.
+        // Either from the page-text or from the "description" meta-tag
+
+        WordCount: uint32;
+        Language: int8; // 0=German; -1=Unknown
     end;
 
-    
+
 implementation
+
 
 procedure AbortMsg(s: string);
 begin
@@ -98,7 +96,9 @@ end;
 
 
 begin
-    if SizeOf(tKey)<>260 then AbortMsg('tKey');
+    // Some data-structurs need to have fixed sizes.
+    // Having the wrong sizes could damage the databases. VERY bad karma!!!
+    // So make some checking to see if they are correct.
     if SizeOf(tHit)<>4 then AbortMsg('tHit');
     if SizeOf(tPageInfo)<>(cMaxUrlLength+cMaxTitleLength+263) then AbortMsg('tPageInfo');
 end.
