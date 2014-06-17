@@ -2,7 +2,7 @@ unit ServerMain;
 
 (*
     OpenAcoon - An OpenSource Internet-Search-Engine
-    Copyright (C) 1999-2008 Acoon GmbH
+    Copyright (C) 1999-2014 Acoon GmbH
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License version 2 as
@@ -12,32 +12,6 @@ unit ServerMain;
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
--------------------------------------------------------------------------------
-
-ChangeLog:
-21-Apr-2008 MikeS Modified: CheckDataPath now closed the old KeyDbs when
-    changing to a new search-index.
-26-Apr-2008 MikeS Added: New procedure ReferenceRAMCaches to prevent
-    swapping-out of important caches. Swapping-out these caches previously
-    caused search-tzimes of more than 20 seconds when they needed to be
-    swapped back in.
-06-May-2008 MikeS Bugfix: Corrected some texts in the UI. It was "ms" when it
-    should have been "sec" in some instances.
-11-May-2008 MikeS Modified: Changed the default-values of the
-    ranking-paramaters.
-13-May-2008 MikeS Modified: Changed the names of several file-system constants
-    that are defined in FileLocation.pas.
-22-May-2008 MikeS Added: UrlLength from filter.dat is now used for ranking.
-24-May-2008 MikeS Modified: Changes to remove the need for url.idx files.
-    Document-info now exists on disk in fixed-length data-structures. This
-    greatly reduces the required RAM-caches. For an index with 200 million
-    pages this reduces the required RAM by 800mb!
-
 *)
 
 interface

@@ -1,3 +1,5 @@
 bin/
 *.exe
 *.dcu
+*.dproj
+*.dproj.local

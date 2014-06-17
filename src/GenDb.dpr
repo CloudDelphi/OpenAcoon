@@ -1,41 +1,19 @@
 program GenDb;
 
 (*
-  OpenAcoon - An OpenSource Internet-Search-Engine
-  Copyright (C) 1999-2008 Acoon GmbH
+    OpenAcoon - An OpenSource Internet-Search-Engine
+    Copyright (C) 1999-2014 Acoon GmbH
 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License version 2 as
-  published by the Free Software Foundation.
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License version 2 as
+    published by the Free Software Foundation.
 
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License along
-  with this program; if not, write to the Free Software Foundation, Inc.,
-  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-  -------------------------------------------------------------------------------
-
-  ChangeLog:
-  20-Apr-2008 MikeS Bugfix: Corrected a bug in DoPass4 which caused a major
-  slowdown.
-  06-May-2008 MikeS Bugfix: Removed a reference to cTempPath+'inf.tmp' that must
-  have been obsolete for a loooong time.
-  19-May-2008 MikeS Added: DoPass1 now writes information about the URL-length
-  to filter.dat. This is to be used for better ranking in ServerMain.pas.
-  22-May-2008 MikeS Modified: UrlLength for FilterData is now calculated
-  with disregard to leading "www." in DoPass1.
-  24-May-2008 MikeS Modified: Changes to remove the need for url.idx files.
-  Document-info is now written in fixed-length data-structures. This
-  increases required disk-space, but greatly reduces the required RAM-caches
-  in the SearchServer. For an index with 200 million pages this will reduce
-  the required RAM by 800mb!
-  04-Jun-2008 MikeS Modified: A little cleanup. Removed some unused code.
-
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 *)
+
 {$APPTYPE CONSOLE}
 
 

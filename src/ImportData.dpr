@@ -2,7 +2,7 @@ program ImportData;
 
 (*
     OpenAcoon - An OpenSource Internet-Search-Engine
-    Copyright (C) 1999-2008 Acoon GmbH
+    Copyright (C) 1999-2014 Acoon GmbH
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License version 2 as
@@ -12,24 +12,6 @@ program ImportData;
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
--------------------------------------------------------------------------------
-
-ChangeLog:
-30-Apr-2008 MikeS Bugfix: Changes to HandleWWWData and CreateKeyword. There was
-    a bug when the keyword-database grows beyond 512mb in size which caused
-    internal data-structures to malfunction. Now the keyword-database is
-    limited to a little less than 512mb. Additional new unique keywords are now
-    ignored if the keyword-database is above that threshold.
-28-May-2008: MikeS Modified: FreeKeyCache now only writes back the hash-table
-    if it was modified. This only eliminates the write-back if no new keywords
-    were added to the database which in reality only happens if the keyword-
-    database has already reached its maximum size.
-
 *)
 
 {$APPTYPE CONSOLE}
