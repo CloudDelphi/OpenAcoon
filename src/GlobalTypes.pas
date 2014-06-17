@@ -1,28 +1,17 @@
 unit GlobalTypes;
 
 (*
-  OpenAcoon - An OpenSource Internet-Search-Engine
-  Copyright (C) 1999-2008 Acoon GmbH
+    OpenAcoon - An OpenSource Internet-Search-Engine
+    Copyright (C) 1999-2014 Acoon GmbH
 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License version 2 as
-  published by the Free Software Foundation.
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License version 2 as
+    published by the Free Software Foundation.
 
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License along
-  with this program; if not, write to the Free Software Foundation, Inc.,
-  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-  -------------------------------------------------------------------------------
-
-  ChangeLog:
-  23-May-2008 MikeS Added: New cCRLF and cPathDelimiter constants which are
-  defined appropriately for Windows and Linux via IFDEF UNIX.
-
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 *)
 
 interface
@@ -50,11 +39,11 @@ const
     cIs64Bit = '';
 {$endif}
 
-    cShortVersion = '4.12.5';
-    cDate = '26-Sep-2013';
+    cShortVersion = '5.0.0';
+    cDate = '17-Sep-2014';
     cVersion = cShortVersion + ' '+cIs64Bit+' '+cDate;
 
-    cCopyright = '(c) 1999-2013 Acoon GmbH';
+    cCopyright = '(c) 1999-2014 Acoon GmbH';
     cVersionCopy = cVersion + '  ' + cCopyright;
     cGPLNotice = '';
     (*  'This program is licensed under GPL version 2 (see LICENSE.TXT)' + cCRLF +

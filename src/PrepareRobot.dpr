@@ -2,7 +2,7 @@ program PrepareRobot;
 
 (*
     OpenAcoon - An OpenSource Internet-Search-Engine
-    Copyright (C) 1999-2008 Acoon GmbH
+    Copyright (C) 1999-2014 Acoon GmbH
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License version 2 as
@@ -12,24 +12,6 @@ program PrepareRobot;
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
--------------------------------------------------------------------------------
-
-ChangeLog:
-07-May-2008 MikeS: Added "/unignore" option.
-12-May-2008 MikeS: Added the option to restrict URLs given to the Robot to
-    a maximum path-depth. See "PathDepth" function for explanation of
-    path-depth.
-16-May-2008 MikeS: Added robot.MaxUrlsPerHost setting to config-file.
-21-May-2008 MikeS: Added: Do NOT give the Robot URLs which contain a
-    quotation-mark ("). This is a workaround for a supposed bug in the
-    Parser.
-27-May-2008 MikeS Added: New config-file option "robot.CountMaxUrlsPerPart".
-
 *)
 
 {$APPTYPE CONSOLE}

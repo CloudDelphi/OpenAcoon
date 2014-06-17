@@ -2,7 +2,7 @@ unit Config;
 
 (*
     OpenAcoon - An OpenSource Internet-Search-Engine
-    Copyright (C) 1999-2008 Acoon GmbH
+    Copyright (C) 1999-2014 Acoon GmbH
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License version 2 as
@@ -12,29 +12,6 @@ unit Config;
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
--------------------------------------------------------------------------------
-
-    The purpose of this unit is to provide an interface to configuration-data
-    contained in openacoon.config.default and openacoon.config.
-
-    The filename can be easily changed from "openacoon.* " to anything else
-    by changing the "cConfigName" constant.
-
-    Configuration info is read at program-start, so any changes made to the
-    config-files while the program is running WILL NOT BE NOTICED automatically.
-    If a program runs long enough to make this a problem, it can call
-    ConfigReadInfo to re-read the config-files prior to accessing any setting.
-
--------------------------------------------------------------------------------
-
-ChangeLog:
-27-Apr-2008 MikeS: Written this unit.
-
 *)
 
 interface

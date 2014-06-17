@@ -2,7 +2,7 @@ unit RobotMain;
 
 (*
     OpenAcoon - An OpenSource Internet-Search-Engine
-    Copyright (C) 1999-2008 Acoon GmbH
+    Copyright (C) 1999-2014 Acoon GmbH
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License version 2 as
@@ -12,46 +12,6 @@ unit RobotMain;
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
--------------------------------------------------------------------------------
-
-ChangeLog:
-25-Apr-2008 MikeS Modified: Changes to increase the maximum number of open
-    connections and the number of new connections per second.
-30-Apr-2008 MikeS Bugfix: Corrected a synchronisation-bug regarding
-    CurConnections.
-15-May-2008 MikeS Modified: Increased the maximum number of new connections per
-    second to 125, and the maximum number of simultanious connections
-    to 400.
-16-May-2008 MikeS Modified: FormCreate now reads robot.UserAgent and index.Max-Page-Size
-    settings from the config-file.
-17-May-2008: MikeS Modified: Changes to tGetUrl to massively improve performance.
-    Previously every web-page was saved to a separate file. Now every second
-    only one file is written containing all the web-pages whose download
-    completed in that second.
-18-May-2008: MikeS Modified: StartNewConnection now also counts new requests
-    for robots.txt as new connections.
-18-May-2008: MikeS Modified: Increased the maximum number of new connections
-    per second to 500, and the maximum number of simultanious connections
-    to 1000.
-18-May-2008: MikeS Bugfix: IncCurConnections was called via Synchronize from
-    the context of the main thread. This MUST NOT happen! Now fixed.
-19-May-2008: MikeS Bugfix: Made a small change to tGetUrl.Create hoping that
-    this will finally fix the intermittend bug where the Robot hangs at maximum
-    number of connections used, but never closing and freeing them.
-26-May-2008 MikeS Bugfix: Fixed display of current-connections not updating
-    when crawl is complete.
-26-May-2008 MikeS Modified (Bugfix?): Changed thread-synchronization from
-    using Synchronize-calls to using a tCriticalSection. Another attempt to
-    fix the bug where the robot sometimes just stops.
-29-May-2008 MikeS Modified: Added a little code to make absolutely sure that
-    the code in Timer1Timer cannot be preempted. Yet another, another attempt
-    to stop the robot sometimes stopping.
-
 *)
 
 interface
