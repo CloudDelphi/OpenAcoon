@@ -18,7 +18,7 @@ interface
 
 uses
     GlobalTypes;
-    
+
 const
     // Usually use cDbBits=7 for the full-scale software and cDbBits=2 for the FreshBot
     cDbBits = 7; // Number of bits needed for the shard-number.
@@ -91,11 +91,23 @@ begin
 end;
 
 
+function tHitSizeCorrect:boolean;
+begin
+    Result:= SizeOf(tHit) = 4;
+end;
+
+
+function tPageInfoSizeCorrect:boolean;
+begin
+    Result:= SizeOf(tPageInfo) = (cMaxUrlLength+cMaxTitleLength+263);
+end;
+
+
 begin
     // Some data-structurs need to have fixed sizes.
     // Having the wrong sizes could damage the databases. VERY bad karma!!!
     // So make some checking to see if they are correct.
-    if SizeOf(tHit)<>4 then AbortMsg('tHit');
-    if SizeOf(tPageInfo)<>(cMaxUrlLength+cMaxTitleLength+263) then AbortMsg('tPageInfo');
+    if not tHitSizeCorrect then AbortMsg('tHit');
+    if not tPageInfoSizeCorrect then AbortMsg('tPageInfo');
 end.
 
