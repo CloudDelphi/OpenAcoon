@@ -3,3 +3,5 @@ bin/
 *.dcu
 *.dproj
 *.dproj.local
+*.o
+*.ppu

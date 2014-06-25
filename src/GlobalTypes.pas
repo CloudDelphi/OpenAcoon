@@ -60,10 +60,22 @@ type
 
 implementation
 
+
+function IntSizesCorrect:boolean;
 begin
-    if (SizeOf(int8) <> 1) or (SizeOf(int16) <> 2) or (SizeOf(int32) <> 4) or
-      (SizeOf(uint8) <> 1) or (SizeOf(uint16) <> 2) or (SizeOf(uint32) <> 4) or
-      (SizeOf(integer) <> 4) then
+    Result:=
+	(SizeOf(int8) = 1) and
+	(SizeOf(int16) = 2) and
+	(SizeOf(int32) = 4) and
+	(SizeOf(uint8) = 1) and
+	(SizeOf(uint16) = 2) and
+	(SizeOf(uint32) = 4) and
+	(SizeOf(integer) = 4);
+end;
+
+
+begin
+    if not IntSizesCorrect then
     begin
         WriteLn('!!! Internal Error !!!');
         WriteLn('The size of at least one integer-type does not match expectations.');
