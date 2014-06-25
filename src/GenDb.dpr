@@ -509,7 +509,7 @@ begin
                     WriteLn('Exception #2');
                     WriteLn(p^.KeyTxt);
                     WriteLn(p^.An);
-                    WriteLn(integer(p^.KeyData));
+                    // WriteLn(integer(p^.KeyData));
                     halt;
                 end;
                 p2 := p^.Next;
