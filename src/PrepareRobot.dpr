@@ -459,8 +459,7 @@ var
     Changed: integer; { Anzahl der geänderten URLs }
     DbNr: integer;
 begin
-
-// for DbNr:=0 to cDbCount-1 do { Alle Datenbanken durchgehen }
+    for DbNr:=0 to cDbCount-1 do { Alle Datenbanken durchgehen }
     begin
         f := tCacheFile.Create; { Datenbank zum Lesen öffnen }
         f.Assign(cUrlDb + IntToStr(DbNr));
