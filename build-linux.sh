@@ -30,19 +30,19 @@ mv Sleep ../bin
 $compiler Parser.dpr
 mv Parser ../bin
 
-$compiler Robot.dpr
-mv Robot ../bin
+$compiler GenDb.dpr
+mv GenDb ../bin
+
+$compiler cgi/query.dpr
+mv /cgi/query ../bin
 
 $compiler RobotNew.dpr
 mv RobotNew ../bin
 
-$compiler GenDb.dpr
-mv GenDb ../bin
-
 $compiler SearchServer.dpr
 mv SearchServer ../bin
 
-$compiler cgi/query.dpr
-mv /cgi/query ../bin
+$compiler Robot.dpr
+mv Robot ../bin
 
 cd ..
