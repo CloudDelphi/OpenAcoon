@@ -33,8 +33,11 @@ function Ip2Str(const IP: tIP4): string;
 implementation
 
 uses
+    {$IfDef DCC}
     WinSock,
     Windows,
+    {$EndIf}
+    OSWrapper,
     Logging,
     Hash,
     Classes,
