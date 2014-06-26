@@ -24,8 +24,8 @@ uses
     SysUtils;
 
 
-function GetEnv(name: string): string;
 {$IfDef DCC}
+function GetEnv(name: pchar): string;
 var
     Txt: array [0 .. 10000] of char;
 begin
@@ -34,6 +34,7 @@ begin
     Result := StrPas(Txt);
 end;
 {$Else}
+function GetEnv(name: string): string;
 begin
     Result:= GetEnvironmentVariable(Name);
 end;
