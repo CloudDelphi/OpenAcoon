@@ -10,39 +10,32 @@ rm bin/*
 set -e
 compiler="fpc -Mdelphi -Tlinux -O3 -vew -Sew -vq -Fl~/sources/indy10/"
 
+
+function compile {
+    $compiler $1.dpr
+    mv $1 ../bin
+    echo -e '\n'
+}
+
+
 cd src
 
-$compiler ImportUrls.dpr
-mv ImportUrls ../bin
-
-$compiler CleanUrlsTxt.dpr
-mv CleanUrlsTxt ../bin
-
-$compiler PrepareRobot.dpr
-mv PrepareRobot ../bin
-
-$compiler ImportData.dpr
-mv ImportData ../bin
-
-$compiler Sleep.dpr
-mv Sleep ../bin
-
-$compiler Parser.dpr
-mv Parser ../bin
-
-$compiler GenDb.dpr
-mv GenDb ../bin
-
-$compiler cgi/query.dpr
-mv cgi/query ../bin
-
-$compiler RobotNew.dpr
-mv RobotNew ../bin
-
-$compiler SearchServer.dpr
-mv SearchServer ../bin
-
-$compiler Robot.dpr
-mv Robot ../bin
+compile ImportUrls
+compile CleanUrlsTxt
+compile PrepareRobot
+compile ImportData
+compile Sleep
+compile Parser
+compile GenDb
+compile cgi/query
+compile RobotNew
+compile SearchServer
+compile Robot
 
 cd ..
+
+echo "++++++++++++++++++++++++++"
+echo "+                        +"
+echo "+ Build was successful ! +"
+echo "+                        +"
+echo "++++++++++++++++++++++++++"
