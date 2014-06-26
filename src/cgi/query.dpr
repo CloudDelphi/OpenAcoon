@@ -17,7 +17,7 @@ uses
     KillThread,
     SearchResults,
     NewSearch,
-    Windows,
+    OSWrapper,
     PostProcess;
 
 const
@@ -366,7 +366,6 @@ var
     StartTick: uint32;
     SearchThread: tNewSearchThread;
     SrOut: tSearchResults;
-    query: string;
 begin
     TKillThread.Create(35); // End this process after 35 seconds no matter what
 

@@ -8,7 +8,7 @@ rm src/cgi/*.ppu
 mkdir bin
 rm bin/*
 set -e
-compiler="fpc -Mdelphi -Tlinux -O3 -vew -Sew -vq"
+compiler="fpc -Mdelphi -Tlinux -O3 -vew -Sew -vq -Fl~/sources/indy10/"
 
 cd src
 
@@ -34,7 +34,7 @@ $compiler GenDb.dpr
 mv GenDb ../bin
 
 $compiler cgi/query.dpr
-mv /cgi/query ../bin
+mv cgi/query ../bin
 
 $compiler RobotNew.dpr
 mv RobotNew ../bin

@@ -21,11 +21,12 @@ type
 implementation
 
 uses
-    Windows,
+    //Windows,
     SysUtils,
     CgiTools,
     Tools,
-    idHttp;
+    IdHTTP,
+    OSWrapper;
 
 
 const

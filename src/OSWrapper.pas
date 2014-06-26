@@ -19,25 +19,30 @@ interface
 uses
     Types;
 
+{$IfNDef DCC}
+type
+    RawByteString = AnsiString;
+{$EndIf}
+
 function GetTickCount:int64;
 
 implementation
 
 uses
-{$ifdef UNIX}
+{$IfDef UNIX}
     SysUtils;
-{$else}
+{$Else}
     Windows;
-{$endif}
+{$EndIf}
 
 
 function GetTickCount:int64;
 begin
-    {$ifdef UNIX}
+    {$Ifdef UNIX}
     Result:=Trunc(Now*24*3600*1000);
-    {$else}
+    {$Else}
     Result:=Windows.GetTickCount;
-    {$endif}
+    {$Endif}
 end;
 
 
