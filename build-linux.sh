@@ -8,6 +8,9 @@ rm src/cgi/*.ppu
 mkdir bin
 rm bin/*
 set -e
+
+# You will probably need to change the -Fl parameter below to point
+# to where you have indy10
 compiler="fpc -Mdelphi -Tlinux -O3 -vew -Sew -vq -Fl~/sources/indy10/"
 
 
