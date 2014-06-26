@@ -18,7 +18,6 @@ program RobotNew;
 
 uses
     SysUtils,
-    Windows,
     RobotsTxt in 'RobotsTxt.pas',
     HTTPClient in 'HTTPClient.pas',
     DNSResolver in 'DNSResolver.pas',
