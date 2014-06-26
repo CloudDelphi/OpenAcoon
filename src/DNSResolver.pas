@@ -36,6 +36,8 @@ uses
     {$IfDef DCC}
     WinSock,
     Windows,
+    {$Else}
+    NetDb,
     {$EndIf}
     OSWrapper,
     Logging,
@@ -129,39 +131,19 @@ begin
 end;
 
 
-function GetIP4ByHostName(const AHostName: AnsiString): tIP4;
-// Note: AHostName is assumed to always be lower-case!
+function ResolveHostByNameIPv4(const aHostName: AnsiString): tIP4;
 var
+    {$IfDef DCC}
     HostName: array [0 .. 255] of AnsiChar;
     HostEnt: pHostEnt;
-    IP: array [0 .. MaxIP4s - 1] of tIP4;
-    IpCount: integer;
-    p: PAnsiChar;
-    p2: pointer;
-    Ti: cardinal;
-    s: string;
-    i64: int64;
-    HashCode: integer;
-    Data: pDNSData;
+    {$Else}
+    IPv4Arr: array of tHostAddr;
+    retVal: integer;
+    {$EndIf}
 begin
-    Result.IP := 0;
-    if Length(AHostName) > 255 then exit;
-
-    HashCode := CalcCRC(AHostName) and MaxHash;
-    Data := HashTable[HashCode];
-    while Data <> nil do
-    begin
-        if Data^.HostName = AHostName then exit(Data^.IP)
-        else Data := Data^.Next;
-    end;
-    // DebugLogMsg('robot.log','Couldn''t find DNS cache-entry for "'+AHostName+'".');
-
+    {$IfDef DCC}
     StrPCopy(HostName, AHostName);
-    Ti := GetTickCount;
     HostEnt := GetHostByName(HostName);
-    Ti := GetTickCount - Ti;
-    if Ti > 20000 then LogMsg('robot.log', 'DNS lookup for "' + AHostName + '" took ' + IntToStr(Ti) + 'ms.');
-
     if HostEnt <> nil then
     begin
         if (HostEnt^.h_addrtype = AF_INET) and (HostEnt^.h_length = 4) then
@@ -179,6 +161,39 @@ begin
             Result := IP[Random(IpCount)];
         end;
     end;
+    {$Else}
+    SetLength(IPv4Arr, 10);
+    retVal := ResolveName(aHostName, IPv4Arr);
+    if retVal = 0 then Result.IP := 0
+    else Result.IP := IPv4Arr[ Random( High(IPv4Arr) + 1) ].s_addr;
+    {$EndIf}
+end;
+
+
+function GetIP4ByHostName(const AHostName: AnsiString): tIP4;
+// Note: AHostName is assumed to always be lower-case!
+var
+    Ti: cardinal;
+    HashCode: integer;
+    Data: pDNSData;
+begin
+    Result.IP := 0;
+    if Length(AHostName) > 255 then exit;
+
+    HashCode := CalcCRC(AHostName) and MaxHash;
+    Data := HashTable[HashCode];
+    while Data <> nil do
+    begin
+        if Data^.HostName = AHostName then exit(Data^.IP)
+        else Data := Data^.Next;
+    end;
+    // DebugLogMsg('robot.log','Couldn''t find DNS cache-entry for "'+AHostName+'".');
+
+    Ti := GetTickCount;
+    Result:=ResolveHostByNameIPv4(AHostName);
+    Ti := GetTickCount - Ti;
+    if Ti > 20000 then LogMsg('robot.log', 'DNS lookup for "' + AHostName + '" took ' + IntToStr(Ti) + 'ms.');
+
     if Result.IP <> 0 then AddToCache(AHostName, Result);
 end;
 
@@ -189,6 +204,7 @@ begin
 end;
 
 
+{$IfDef DCC}
 procedure Startup;
 var
     ErrorCode: integer;
@@ -196,11 +212,14 @@ var
 begin
     ErrorCode := WSAStartup($0101, WSAData);
 end;
+{$EndIf}
 
 
 begin
     CritSec := tCriticalSection.Create;
     LoadCacheData;
+    {$IfDef DCC}
     Startup;
+    {$EndIf}
 
 end.
