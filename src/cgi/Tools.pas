@@ -4,13 +4,12 @@ interface
 
 function SafeStrToIntDef(const s: string; default: integer): integer;
 function BeginsWith(const toFind, findIn: string): boolean;
-function BeginsWithAndDeleteIfTrue(const toFind: string;
-var findIn: string): boolean;
+function BeginsWithAndDeleteIfTrue(const toFind: string; var findIn: string): boolean;
 
 implementation
 
 uses
-    SysUtils, Windows;
+    SysUtils;
 
 
 
