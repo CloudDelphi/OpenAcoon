@@ -17,7 +17,8 @@ unit ServerMain;
 interface
 
 uses
-    Windows,
+    //Windows,
+    OSWrapper,
     Messages,
     SysUtils,
     Classes,
@@ -27,12 +28,12 @@ uses
     Dialogs,
     StdCtrls,
     ExtCtrls,
-    IdBaseComponent,
-    IdComponent,
-    IdCustomTCPServer,
+    //IdBaseComponent,
+    //IdComponent,
+    //IdCustomTCPServer,
     IdCustomHTTPServer,
     IdHTTPServer,
-    idContext,
+    IdContext,
     DomainRank;
 
 type
@@ -83,7 +84,7 @@ uses
     SyncObjs,
     Words;
 
-{$R *.DFM}
+{$R *.dfm}
 
 
 const
@@ -1811,7 +1812,7 @@ begin
     try
         ReWrite(f);
     except
-        MessageBeep(0);
+        // MessageBeep(0);
         halt;
     end;
 end;
@@ -2059,7 +2060,7 @@ begin
             GenResults(Li);
         end;
 
-        Res.CharSet := 'text/plain';
+        //Res.CharSet := 'text/plain';
         Res.ContentText := Li.Text;
 
         Li.Free;

@@ -11,7 +11,7 @@ set -e
 
 # You will probably need to change the -Fl parameter below to point
 # to where you have indy10
-compiler="fpc -Mdelphi -Tlinux -O3 -vew -Sew -vq -Fl~/sources/indy10/"
+compiler="fpc -Mdelphi -Tlinux -O3 -vew -Se -vq -Fu~/sources/indy10/ -Fu/usr/lib64/lazarus/lcl/units/x86_64-linux/ -Fu/usr/lib64/lazarus/components/lazutils/lib/x86_64-linux/"
 
 
 function compile {
@@ -23,6 +23,7 @@ function compile {
 
 cd src
 
+compile SearchServer
 compile ImportUrls
 compile CleanUrlsTxt
 compile PrepareRobot
@@ -32,7 +33,6 @@ compile Parser
 compile GenDb
 compile cgi/query
 compile RobotNew
-compile SearchServer
 compile Robot
 
 cd ..
