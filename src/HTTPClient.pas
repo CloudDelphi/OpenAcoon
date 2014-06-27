@@ -19,9 +19,9 @@ interface
 uses
     Classes,
     GlobalTypes,
+    MemoryFile,
     ScktComp,
-    DNSResolver,
-    MemoryFile;
+    DNSResolver;
 
 type
     tHTTPClient = class(tThread)
