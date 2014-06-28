@@ -1,4 +1,4 @@
-unit ServerMain;
+program searchservernew;
 
 (*
     OpenAcoon - An OpenSource Internet-Search-Engine
@@ -14,68 +14,17 @@ unit ServerMain;
     GNU General Public License for more details.
 *)
 
-interface
-
 uses
-    //Windows,
     OSWrapper,
-    Messages,
     SysUtils,
     Classes,
-    Graphics,
-    Controls,
-    Forms,
-    Dialogs,
-    StdCtrls,
-    ExtCtrls,
     //IdBaseComponent,
     //IdComponent,
     //IdCustomTCPServer,
     IdCustomHTTPServer,
     IdHTTPServer,
     IdContext,
-    DomainRank;
-
-type
-    TForm1 = class(TForm)
-        Button1: TButton;
-        Timer1: TTimer;
-        Label1: TLabel;
-        Label2: TLabel;
-        Label3: TLabel;
-        Label4: TLabel;
-        Label5: TLabel;
-        Label6: TLabel;
-        Label7: TLabel;
-        Label8: TLabel;
-        Memo1: TMemo;
-        Button2: TButton;
-        Label9: TLabel;
-        Button4: TButton;
-        Label10: TLabel;
-        Label15: TLabel;
-        IdHTTPServer1: TIdHTTPServer;
-        Label11: TLabel;
-        procedure Timer1Timer(Sender: TObject);
-        procedure Button1Click(Sender: TObject);
-        procedure FormCreate(Sender: TObject);
-        procedure Button2Click(Sender: TObject);
-        procedure Button4Click(Sender: TObject);
-        procedure IdHTTPServer1CommandGet(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo;
-        AResponseInfo: TIdHTTPResponseInfo);
-    private
-    { Private declarations }
-    public
-    { Public declarations }
-    end;
-
-
-var
-    Form1: TForm1;
-
-implementation
-
-uses
+    //DomainRank,
     Hash,
     CacheFile,
     GlobalTypes,
@@ -83,9 +32,6 @@ uses
     DbTypes,
     SyncObjs,
     Words;
-
-{$R *.dfm}
-
 
 const
     cMaxKeywords = 10; // This defines the maximum number of keywords per query
@@ -176,11 +122,11 @@ var
     RefreshCachesCountdown: integer;
     Ticks: int64;
     MinTicks, MaxTicks: integer;
-    StopRequested: boolean;
-    MemoLines: tStringList;
     CritSec: tCriticalSection;
     QueryPass: integer;
     EarlyAbort: boolean;
+    IdHTTPServer1: TIdHTTPServer;
+
 
 
 function LookupDomainRank(DocID: integer): integer; inline;
@@ -267,29 +213,9 @@ begin
 end;
 
 
-procedure SetMaxMemoLines(MaxLines: integer);
-begin
-    while MemoLines.Count > MaxLines do
-        MemoLines.Delete(0);
-end;
-
-
-procedure ShowMemo;
-var
-    i: integer;
-begin
-    SetMaxMemoLines(15);
-    Form1.Memo1.Lines.Clear;
-    for i := 0 to MemoLines.Count - 1 do
-        Form1.Memo1.Lines.Add(MemoLines[i]);
-    Form1.Memo1.Update;
-end;
-
-
 procedure AddToMemo(Txt: string);
 begin
-    MemoLines.Add(Txt);
-    ShowMemo;
+    WriteLn(Txt);
 end;
 
 
@@ -299,7 +225,7 @@ const
 var
     ThisName: AnsiString;
     i, j: integer;
-    Code1, Code2, Code3, Code4: integer;
+    Code1, Code3: integer;
     qs: array [0 .. 2048] of AnsiChar;
     Data, Data2: AnsiString;
 begin
@@ -749,7 +675,7 @@ var
     fd: integer;
     AllLocations, TitleOnly, UrlOnly: boolean;
     ThisRankValue: integer;
-    ThisRankFactor: double;
+    //ThisRankFactor: double;
     ThisUrlData: byte;
     PathElements, HostElements: byte;
     TopHitsPointer: int64;
@@ -1612,6 +1538,7 @@ begin
 
     if NewPath <> cSData then
     begin
+	WriteLn('Switching to new index in: ', NewPath);
         if cSData <> '' then
         begin
             for i := 0 to cDbCount - 1 do
@@ -1648,20 +1575,11 @@ procedure ShowQueryStatistics;
 var
     s: string;
 begin
-    with Form1 do
-    begin
-        Label2.Caption := IntToStr(Searchs) + ' of which ' + IntToStr(NoResults) +
-        ' are without result';
-        Label2.Update;
-        Str(0.001 * Ticks / Searchs: 5: 3, s);
-        Label4.Caption := s;
-        Str(0.001 * MaxTicks: 5: 3, s);
-        Label6.Caption := s;
-        Str(0.001 * MinTicks: 5: 3, s);
-        Label8.Caption := s;
-        Label9.Caption := IntToStr(Counter) + ' (' + IntToStr(100 * Counter div Searchs) + ')';
-        Label9.Update;
-    end;
+    WriteLn('Stats: ', Searchs, ' of which ', NoResults, ' are without result');
+    WriteLn('Stats: ', 0.001 * Ticks / Searchs: 5: 3, 'ms/query');
+    WriteLn('Stats: ', 0.001 * MaxTicks: 5: 3, 'ms max/query');
+    WriteLn('Stats: ', 0.001 * MinTicks: 5: 3, 'ms min/query');
+    WriteLn('Stats: ', Counter, ' queries (', 100 * Counter div Searchs, '% cache-hits');
 end;
 
 
@@ -1674,9 +1592,7 @@ begin
     begin
         Ti := GetTickCount;
         ReferenceRAMCaches;
-        MemoLines[0] := 'RAM-Caches refreshed ' + IntToStr
-        (GetTickCount - Ti) + 'ms';
-        SetMaxMemoLines(15);
+        WriteLn('RAM-Caches refreshed ', GetTickCount-Ti, 'ms');
         RefreshCachesCountdown := 0;
     end;
 end;
@@ -1818,7 +1734,7 @@ begin
 end;
 
 
-
+(*
 procedure CheckForQueries;
 var
     Sr: tSearchRec;
@@ -1833,10 +1749,6 @@ begin
     Li.Sorted := false;
     Li.Duplicates := dupAccept;
 
-    Form1.Label11.Caption := cSData;
-    Form1.Label11.Update;
-
-    // repeat
     HandleCacheRefresh;
 
     Code := FindFirst(cSearchTempDir + 'a*', faAnyFile, Sr);
@@ -1905,7 +1817,6 @@ begin
     Sleep(10);
 
     Li.Free;
-    if StopRequested then Form1.Close;
 end;
 
 
@@ -1913,15 +1824,10 @@ procedure TForm1.Timer1Timer(Sender: TObject);
 begin
     Timer1.Enabled := false;
     if not IdHTTPServer1.Active then IdHTTPServer1.Active := true;
-    CheckForQueries;
+    // CheckForQueries;
     Timer1.Enabled := true;
 end;
-
-
-procedure TForm1.Button1Click(Sender: TObject);
-begin
-    StopRequested := true;
-end;
+*)
 
 
 procedure EmptyCache;
@@ -1933,11 +1839,13 @@ begin
 end;
 
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure InitServer;
 var
     i: integer;
     s: string;
 begin
+    IdHTTPServer1:=TIdHTTPServer.Create;
+    IdHTTPServer1.DefaultPort := 8081;
     i := 1;
     while i <= ParamCount do
     begin
@@ -1952,15 +1860,15 @@ begin
     end;
     Randomize;
     RefreshCachesCountdown := 0;
-    Caption := 'SearchServer ' + cVersion;
-    Label10.Caption := cCopyright;
+    WriteLn('SearchServer ', cVersion);
+    WriteLn(cCopyright);
 
     EmptyCache;
     ResetStatistics;
 
-    StopRequested := false;
     cSData := '';
     CheckDataPath;
+    if not IdHTTPServer1.Active then IdHTTPServer1.Active := true;
 end;
 
 
@@ -2086,7 +1994,6 @@ begin
             + '/' + IntToStr(Ti6) + ')');
         end;
 
-        SetMaxMemoLines(15);
         ShowQueryStatistics;
 
         if Ti > 2000 then
@@ -2098,7 +2005,7 @@ begin
 end;
 
 
-procedure TForm1.IdHTTPServer1CommandGet(AContext: TIdContext;
+procedure IdHTTPServer1CommandGet(AContext: TIdContext;
     ARequestInfo: TIdHTTPRequestInfo;
     AResponseInfo: TIdHTTPResponseInfo);
 begin
@@ -2107,22 +2014,7 @@ begin
 end;
 
 
-procedure TForm1.Button2Click(Sender: TObject);
 begin
-    ResetStatistics;
-end;
-
-
-procedure TForm1.Button4Click(Sender: TObject);
-begin
-    EmptyCache;
-end;
-
-
-
-begin
-    MemoLines := tStringList.Create;
-    MemoLines.Sorted := false;
-    MemoLines.Duplicates := dupAccept;
     CritSec := tCriticalSection.Create;
+    InitServer;
 end.
