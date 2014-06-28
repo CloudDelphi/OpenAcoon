@@ -136,6 +136,10 @@ var
     {$IfDef DCC}
     HostName: array [0 .. 255] of AnsiChar;
     HostEnt: pHostEnt;
+	IPCount: integer;
+	IP: array [0 .. MaxIP4s - 1] of tIP4;
+	p: pAnsiChar;
+	p2: pointer;
     {$Else}
     IPv4Arr: array of tHostAddr;
     retVal: integer;

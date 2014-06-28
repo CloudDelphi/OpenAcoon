@@ -76,8 +76,6 @@ begin
     s := ConfigReadString('robot.useragent');
     if s <> '' then HTTPClientDefaultUserAgent := s;
 
-    SetThreadPriority(GetCurrentThread, THREAD_PRIORITY_ABOVE_NORMAL);
-
     StartTi := GetTickCount;
     LastTick := StartTi;
 end;

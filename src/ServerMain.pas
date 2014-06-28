@@ -17,7 +17,7 @@ unit ServerMain;
 interface
 
 uses
-    //Windows,
+    Windows,
     OSWrapper,
     Messages,
     SysUtils,
