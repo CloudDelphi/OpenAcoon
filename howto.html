@@ -12,21 +12,13 @@ It runs right from within the directory where you unpack it.</p>
 <p>Open a command-prompt and change to the directory where you unpacked the files. Run "makedirs.bat". This will create
 several subdirectories within your install directory that will hold all the data-files.</p>
 
-<p>Next go to "http://www.alexa.com/topsites". On the top-right you will find a link to "Top 1,000,000 Sites". Download
-that file and unpack it into the same directory where you put the other files. In the command-prompt run the command:</p>
-
-<p><strong>ImportAlexa top-1m.csv domainrank.txt</strong></p>
-
-<p>This will take a few seconds and will convert the file from Alexa.com into a simpler
-format that the software uses as part of the result-ranking.</p>
-
 <p>Now run the program "ImportUrls". At this point this will only create an empty URL-database.</p>
 
 <p>You will now need some starting-points for the crawler. In the command-prompt enter the following command:</p>
 
 <p><strong>copy domainrank.txt data\txt\urls.txt</strong></p>
 
-<p>This will use the top 1 million sites according to Alexa.com as a starting-point for your crawl. If one million URLs
+<p>This will use a list of one million sites as a starting-point for your crawl. If one million URLs
 sounds like a lot to you... you ain't seen nothing yet. :)</p>
 
 <p>Now these URLs need to be imported into the URL-database. Run "openacoon.bat". This batch-file will also later be used
@@ -83,7 +75,7 @@ how to build an index: Simply start Gendb.exe from the command-prompt. With a ve
 only take about a minute or two. With larger amounts of data you should expect it to be on the order of one hour per 40 million pages.</p>
 
 <p>Note that GenDb.exe will create some temp files that it will NOT clear up when done. It keeps these more or less for
-debugging-purposes. Before you can make another GenDb-run you will need to delete gendb.progress and everything in the 
+debugging-purposes. Before you can make another GenDb-run you will need to delete gendb.progress and everything in the
 data\tmp directory.</p>
 
 <p>Once the index is generated, start SearchServer.exe. The first time you do this you will probably see an alert from your
