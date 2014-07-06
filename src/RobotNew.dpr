@@ -19,14 +19,19 @@ program RobotNew;
 uses
     SysUtils,
     RobotsTxt in 'RobotsTxt.pas',
+    {$ifdef DCC}
     HTTPClient in 'HTTPClient.pas',
+    RobotGetUrl in 'RobotGetUrl.pas',
+    {$else}
+    HTTPClientFPC,
+    RobotGetUrlFPC,
+    {$endif}
     DNSResolver in 'DNSResolver.pas',
     Hash in 'Hash.pas',
     Logging in 'Logging.pas',
     GlobalTypes in 'GlobalTypes.pas',
     MemoryFile in 'MemoryFile.pas',
     MemoryPool in 'MemoryPool.pas',
-    RobotGetUrl in 'RobotGetUrl.pas',
     FileLocation in 'FileLocation.pas',
     Config in 'Config.pas',
     OSWrapper in 'OSWrapper.pas';
