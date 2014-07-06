@@ -42,11 +42,15 @@ implementation
 
 uses
     SysUtils,
+    {$ifdef DCC}
     HTTPClient,
+    Windows,
+    {$else}
+    HTTPClientFPC,
+    {$endif}
     Logging,
     Hash,
     GlobalTypes,
-    Windows,
     // Dialogs,
     Classes,
     SyncObjs;
@@ -107,7 +111,7 @@ var
     RobotsTxtUrl: String;
     ThisIP: tIP4;
 begin
-    SetThreadPriority(GetCurrentThread, THREAD_PRIORITY_BELOW_NORMAL);
+    //SetThreadPriority(GetCurrentThread, THREAD_PRIORITY_BELOW_NORMAL);
     DebugLogMsg('robot.log', 'Hostname=' + CacheElement.HostName);
     CacheElement.IP := GetIP4ByHostName(AnsiString(CacheElement.HostName));
     DebugLogMsg('robot.log', 'IP for ' + CacheElement.HostName + ' is ' + Ip2Str(CacheElement.IP));
