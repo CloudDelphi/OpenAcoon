@@ -18,6 +18,9 @@ program ImportUrls;
 
 
 uses
+    {$ifdef UNIX}
+    BaseUnix,
+    {$endif}
     SysUtils,
     Classes,
     StrUtils,
@@ -529,6 +532,14 @@ begin
             fOut[i].Write(UrlAn[i], 4);
         end;
         fOut[i].Close;
+
+	{$ifdef UNIX}
+	// This fixes some weird behaviour on Linux where a file db2.url0 gets created
+	// with execute-only permission. No read or write at all.
+	fpChmod(cUrlDb+IntToStr(i),&644);
+	{$endif}
+
+
         Inf[i].Free;
     end;
     WriteLn('Done.');
