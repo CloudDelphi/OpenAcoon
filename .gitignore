@@ -8,3 +8,4 @@ bin/
 data/
 .directory
 ImportUrls.rr
+dnscache.dat

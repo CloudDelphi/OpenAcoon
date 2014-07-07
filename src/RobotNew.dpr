@@ -17,15 +17,17 @@ program RobotNew;
 {$APPTYPE CONSOLE}
 
 uses
-    SysUtils,
-    RobotsTxt in 'RobotsTxt.pas',
     {$ifdef DCC}
     HTTPClient in 'HTTPClient.pas',
     RobotGetUrl in 'RobotGetUrl.pas',
     {$else}
+    cthreads,
+    cmem,
     HTTPClientFPC,
     RobotGetUrlFPC,
     {$endif}
+    SysUtils,
+    RobotsTxt in 'RobotsTxt.pas',
     DNSResolver in 'DNSResolver.pas',
     Hash in 'Hash.pas',
     Logging in 'Logging.pas',
