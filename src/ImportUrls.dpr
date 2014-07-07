@@ -330,7 +330,11 @@ begin
     if StartDbNr < 0 then StartDbNr := 0;
     if StartDbNr > (cDbCount - 1) then StartDbNr := cDbCount - 1;
 
-    if EndDbNr < 0 then EndDbNr := 0;
+    if EndDbNr < 0 then
+    begin
+	if DoRoundRobin then EndDbNr := cDbCount - 1
+	else EndDbNr := 0;
+    end;
     if EndDbNr > (cDbCount - 1) then EndDbNr := cDbCount - 1;
 end;
 
