@@ -114,6 +114,7 @@ end;
 procedure HaltRobot;
 begin
     CloseOutputFile;
+    WriteLn;
     halt;
 end;
 

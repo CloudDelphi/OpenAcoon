@@ -15,12 +15,14 @@ program searchservernew;
 *)
 
 uses
+    {$ifdef Unix}
+    cthreads,
+    cmem,
+    {$endif}
     OSWrapper,
     SysUtils,
     Classes,
-    //IdBaseComponent,
-    //IdComponent,
-    //IdCustomTCPServer,
+    IdSocketHandle,
     IdCustomHTTPServer,
     IdHTTPServer,
     IdContext,
@@ -1465,7 +1467,9 @@ begin
         f := tCacheFile.Create;
         f.Assign(cSData + 'rank.dat' + IntToStr(i));
         f.Reset;
-        SetLength(RankData[i], f.FileSize div 4);
+	j := f.FileSize;
+	if j < 4 then j := 4;
+        SetLength(RankData[i], j);
         f.Read(RankData[i][0], f.FileSize);
         for j := 0 to High(RankData[i]) do
         begin
@@ -1478,7 +1482,9 @@ begin
         f := tCacheFile.Create;
         f.Assign(cSData + 'rank2.dat' + IntToStr(i));
         f.Reset;
-        SetLength(UrlData[i], f.FileSize);
+	j := f.FileSize;
+	if j < 1 then j := 1;
+        SetLength(UrlData[i], j);
         f.Read(UrlData[i][0], f.FileSize);
         f.Close;
         f.Free;
@@ -1488,7 +1494,9 @@ begin
         f := tCacheFile.Create;
         f.Assign(cSData + 'backlink.dat' + IntToStr(i));
         f.Reset;
-        SetLength(BackLinkData[i], f.FileSize div 8);
+	j := f.FileSize;
+	if j < 8 then j := 8;
+        SetLength(BackLinkData[i], j div 8);
         f.Read(BackLinkData[i][0], f.FileSize);
         for j := 0 to High(BackLinkData[i]) do
         begin
@@ -1843,9 +1851,15 @@ procedure InitServer;
 var
     i: integer;
     s: string;
+    Binding: TIdSocketHandle;
 begin
     IdHTTPServer1:=TIdHTTPServer.Create;
-    IdHTTPServer1.DefaultPort := 8081;
+    IdHTTPServer1.Bindings.Clear;
+    Binding := IdHTTPServer1.Bindings.Add;
+    Binding.IP := '0.0.0.0';
+    Binding.Port := 8081;
+    //IdHTTPServer1.DefaultPort := 8081;
+
     i := 1;
     while i <= ParamCount do
     begin
@@ -1853,7 +1867,8 @@ begin
         if (s = '-p') or (s = '-port') then
         begin
             Inc(i);
-            IdHTTPServer1.DefaultPort := StrToIntDef(ParamStr(i), 8081);
+            //IdHTTPServer1.DefaultPort := StrToIntDef(ParamStr(i), 8081);
+            Binding.Port := StrToIntDef(ParamStr(i), 8081);
         end;
 
         Inc(i);
@@ -2017,4 +2032,5 @@ end;
 begin
     CritSec := tCriticalSection.Create;
     InitServer;
+    while true do ;
 end.
