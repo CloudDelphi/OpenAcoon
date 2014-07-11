@@ -5,3 +5,9 @@ bin/
 *.dproj.local
 *.o
 *.ppu
+data/
+.directory
+ImportUrls.rr
+dnscache.dat
+parser.err
+parser.log

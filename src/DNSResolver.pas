@@ -17,17 +17,10 @@ unit DNSResolver;
 interface
 
 uses
-    GlobalTypes;
-
-type
-    tIP4 = record
-        case boolean of
-            false: (b: array [1 .. 4] of byte);
-            true: (IP: uint32);
-    end;
+    GlobalTypes,
+    robotglobal;
 
 function GetIP4ByHostName(const AHostName: AnsiString): tIP4;
-function Ip2Str(const IP: tIP4): string;
 
 
 implementation
@@ -144,6 +137,7 @@ var
     IPv4Arr: array of tHostAddr;
     retVal: integer;
     {$EndIf}
+    i: integer;
 begin
     {$IfDef DCC}
     StrPCopy(HostName, AHostName);
@@ -168,9 +162,21 @@ begin
     {$Else}
     SetLength(IPv4Arr, 10);
     retVal := ResolveName(aHostName, IPv4Arr);
+
+    (*
+    WriteLn('High(Ipv4Array)=',High(IPv4Arr));
+    for i:=0 to High(IPv4Arr) do
+    begin
+	Result.IP:=IPv4Arr[ i ].s_addr;
+	WriteLn('IP#',i,'=',Ip2Str(Result));
+    end;
+    *)
+
     if retVal = 0 then Result.IP := 0
-    else Result.IP := IPv4Arr[ Random( High(IPv4Arr) + 1) ].s_addr;
+    //else Result.IP := IPv4Arr[ Random( High(IPv4Arr) + 1) ].s_addr;
+    else Result.IP := IPv4Arr[ 0 ].s_addr;
     {$EndIf}
+    // WriteLn('Host=',aHostName,'   IP=',Ip2Str(Result));
 end;
 
 
@@ -194,17 +200,11 @@ begin
     // DebugLogMsg('robot.log','Couldn''t find DNS cache-entry for "'+AHostName+'".');
 
     Ti := GetTickCount;
-    Result:=ResolveHostByNameIPv4(AHostName);
+    Result := ResolveHostByNameIPv4(AHostName);
     Ti := GetTickCount - Ti;
     if Ti > 20000 then LogMsg('robot.log', 'DNS lookup for "' + AHostName + '" took ' + IntToStr(Ti) + 'ms.');
 
     if Result.IP <> 0 then AddToCache(AHostName, Result);
-end;
-
-
-function Ip2Str(const IP: tIP4): string;
-begin
-    Result := IntToStr(IP.b[1]) + '.' + IntToStr(IP.b[2]) + '.' + IntToStr(IP.b[3]) + '.' + IntToStr(IP.b[4]);
 end;
 
 

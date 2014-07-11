@@ -17,6 +17,7 @@ unit RobotsTxt;
 interface
 
 uses
+    robotglobal,
     DNSResolver;
 
 const
@@ -41,12 +42,17 @@ function RobotsTxtGetIP(AUrl: shortstring): tIP4;
 implementation
 
 uses
+    {$ifdef Unix}
+    cthreads,
+    {$endif}
     SysUtils,
-    HTTPClient,
+    {$ifdef DCC}
+    Windows,
+    {$endif}
+    httpget,
     Logging,
     Hash,
     GlobalTypes,
-    Windows,
     // Dialogs,
     Classes,
     SyncObjs;
@@ -99,7 +105,7 @@ end;
 
 procedure tRobotsTxt.Execute;
 var
-    Cl: tHTTPClient;
+    Cl: tHttpGet;
     s: String;
     IsValidUA: boolean;
     Redirects: integer;
@@ -107,7 +113,7 @@ var
     RobotsTxtUrl: String;
     ThisIP: tIP4;
 begin
-    SetThreadPriority(GetCurrentThread, THREAD_PRIORITY_BELOW_NORMAL);
+    //SetThreadPriority(GetCurrentThread, THREAD_PRIORITY_BELOW_NORMAL);
     DebugLogMsg('robot.log', 'Hostname=' + CacheElement.HostName);
     CacheElement.IP := GetIP4ByHostName(AnsiString(CacheElement.HostName));
     DebugLogMsg('robot.log', 'IP for ' + CacheElement.HostName + ' is ' + Ip2Str(CacheElement.IP));
@@ -124,12 +130,14 @@ begin
 
     repeat
         DebugLogMsg('robot.log', 'RobotsTxt at "' + RobotsTxtUrl + '"');
-        Cl := tHTTPClient.Create(RobotsTxtUrl, ThisIP);
-        Cl.Start;
-        Cl.WaitForCompletion(30000);
+        Cl := tHttpGet.Create;
+	Cl.Host := CacheElement.HostName;
+	Cl.IP := CacheElement.IP;
+	Cl.Path := '/robots.txt';
+	Cl.Get;
 
         ReadyToExit := true;
-        if Cl.IsComplete and (Redirects < 5) then
+        if (Cl.ErrorCode = 0) and (Redirects < 5) then
         begin
             DebugLogMsg('robot.log', 'Actual StatusCode is ' + IntToStr(Cl.GetStatusCode));
             if (Cl.GetStatusCode = 301) or (Cl.GetStatusCode = 302) then
@@ -165,7 +173,7 @@ begin
     until ReadyToExit;
 
 
-    if Cl.IsComplete then
+    if Cl.ErrorCode = 0 then
     begin
         CacheElement.StatusCode := Cl.GetStatusCode;
 
@@ -369,7 +377,10 @@ begin
     else
     begin
         // DebugLogMsg('robot.log','StatusCode='+IntTostr(p.StatusCode)+' for "'+AUrl+'"');
-        if (p.StatusCode = 200) or (p.StatusCode = 404) or (p.StatusCode = 403) then Result := true
+        if
+	    (p.StatusCode = 200) or
+	    (p.StatusCode = 404) or
+	    (p.StatusCode = 403) then Result := true
         else Result := false;
     end;
 

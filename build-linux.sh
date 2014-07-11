@@ -23,6 +23,7 @@ function compile {
 
 cd src
 
+compile RobotNew
 compile searchservernew
 compile ImportUrls
 compile CleanUrlsTxt
@@ -32,7 +33,6 @@ compile Sleep
 compile Parser
 compile GenDb
 compile cgi/query
-#compile RobotNew
 #compile Robot
 #compile SearchServer
 
