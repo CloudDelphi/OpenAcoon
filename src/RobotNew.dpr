@@ -18,15 +18,23 @@ program RobotNew;
 
 uses
     {$ifdef DCC}
-    HTTPClient in 'HTTPClient.pas',
-    RobotGetUrl in 'RobotGetUrl.pas',
+	HTTPClient in 'HTTPClient.pas',
+	RobotGetUrl in 'RobotGetUrl.pas',
     {$else}
-    cthreads,
-    cmem,
-    HTTPClientFPC,
-    RobotGetUrlFPC,
+	httpget,
+	geturl,
+
+	{$ifdef Unix}
+	    cthreads,
+	    cmem,
+	{$endif}
+
+	//HTTPClientFPC,
+	RobotGetUrlFPC,
     {$endif}
+
     SysUtils,
+    robotglobal,
     RobotsTxt in 'RobotsTxt.pas',
     DNSResolver in 'DNSResolver.pas',
     Hash in 'Hash.pas',
@@ -188,13 +196,14 @@ begin
         // Label17.Caption := IntToStr(NewConns) + '/' + s;
 
 
-
+	(*
         FailedCounter := (FailedCounter + 1) mod 60;
         LastFailed[FailedCounter] := GetAndResetFailedConnectionCount;
         FailedSum := 0;
         for i := 0 to 59 do
             Inc(FailedSum, LastFailed[i]);
         Str(1.0 * FailedSum / 60.0: 4: 2, s);
+	*)
         // Label18.Caption := IntToStr(LastFailed[FailedCounter]) + '/' + s;
 
     except

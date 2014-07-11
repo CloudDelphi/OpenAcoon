@@ -18,6 +18,10 @@ program Parser;
 
 
 uses
+    {$ifdef Unix}
+    cthreads,
+    cmem,
+    {$endif}
     OSWrapper,
     SysUtils,
     Classes,

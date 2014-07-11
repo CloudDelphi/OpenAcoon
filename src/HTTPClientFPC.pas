@@ -14,14 +14,20 @@ unit HTTPClientFPC;
     GNU General Public License for more details.
 *)
 
+
+
 interface
 
 uses
+    {$ifdef Unix}
+    cthreads,
+    {$endif}
     Classes,
     GlobalTypes,
     MemoryFile,
     fpsock,
-    DNSResolver;
+    fpasync,
+    robotglobal;
 
 type
     tHTTPClient = class(tThread)
@@ -32,6 +38,7 @@ type
         ResponseData: tMemoryFile;
         StatusCode: integer;
         Client: tTCPClient;
+	el: TEventLoop;
         Request: AnsiString;
         IP: tIP4;
 
@@ -59,26 +66,36 @@ type
         procedure WaitForCompletion(TimeOut: int32); // TimeOut in MilliSekunden
     end;
 
-var
-    HTTPClientDefaultMaxSize: int32;
-    HTTPClientDefaultUserAgent: AnsiString;
+
+
+
+
 
 procedure CountFailedConnection;
 function GetAndResetFailedConnectionCount: integer;
+
+
+
+// --------------------------------------------------------------------------
+
 
 
 implementation
 
 uses
     SysUtils,
-    //Windows,
     Logging,
     IdGlobal,
     SyncObjs;
 
+
+
 var
     FailedCS: tCriticalSection;
     FailedConnections: integer;
+
+
+
 
 
 procedure CountFailedConnection;
@@ -90,6 +107,8 @@ end;
 
 
 
+
+
 function GetAndResetFailedConnectionCount: integer;
 begin
     FailedCS.Enter;
@@ -97,6 +116,8 @@ begin
     FailedConnections := 0;
     FailedCS.Leave;
 end;
+
+
 
 
 
@@ -111,6 +132,9 @@ begin
     end;
     Result := true;
 end;
+
+
+
 
 
 constructor tHTTPClient.Create(AUrl: AnsiString; ThisIP: tIP4);
@@ -132,6 +156,9 @@ begin
 end;
 
 
+
+
+
 destructor tHTTPClient.Destroy;
 begin
     ResponseData.Free;
@@ -139,10 +166,16 @@ begin
 end;
 
 
+
+
+
 function tHTTPClient.Eof: boolean;
 begin
     Result := Position > ResponseData.Size;
 end;
+
+
+
 
 
 procedure tHTTPClient.Shutdown;
@@ -178,6 +211,9 @@ begin
 end;
 
 
+
+
+
 procedure tHTTPClient.ErrorAbort(ErrCode: integer);
 begin
     if ErrCode >= 996 then CountFailedConnection;
@@ -191,10 +227,16 @@ begin
 end;
 
 
+
+
+
 procedure tHTTPClient.ErrorUnknownHost;
 begin
     ErrorAbort(404); // "Not found"
 end;
+
+
+
 
 
 procedure tHTTPClient.Execute;
@@ -233,6 +275,10 @@ begin
 
     try
         Client := tTCPClient.Create(nil);
+	el := TEventLoop.Create;
+	Client.EventLoop := el;
+
+        DebugLogMsg('robot.log', 'Port=' + IntToStr(Port));
         Client.Port := Port;
         DebugLogMsg('robot.log', Host + ' is pre-resolved to ' + Ip2Str(IP));
         if IP.IP <> 0 then Client.Host := Ip2Str(IP)
@@ -254,6 +300,7 @@ begin
                 exit;
             end;
         end;
+	el.Run;
 
 
         Request :=
@@ -326,6 +373,9 @@ begin
 end;
 
 
+
+
+
 function tHTTPClient.ReadFromStream(var s: shortstring; ErrCode: integer): integer;
 var
     Ti1: int64;
@@ -361,10 +411,15 @@ begin
 end;
 
 
+
+
+
 function tHTTPClient.FilePos: int32;
 begin
     Result := Position;
 end;
+
+
 
 
 (*
@@ -380,6 +435,8 @@ end;
 *)
 
 
+
+
 function tHTTPClient.GetResponse: AnsiString;
 begin
     SetLength(Result, ResponseData.Size);
@@ -390,10 +447,15 @@ end;
 
 
 
+
+
 function tHTTPClient.GetStatusCode: integer;
 begin
     Result := StatusCode;
 end;
+
+
+
 
 
 function tHTTPClient.IsComplete: boolean;
@@ -402,10 +464,16 @@ begin
 end;
 
 
+
+
+
 procedure tHTTPClient.Seek(APosition: int32);
 begin
     Position := APosition + 1;
 end;
+
+
+
 
 
 procedure tHTTPClient.WaitForCompletion(TimeOut: int32);
@@ -421,6 +489,9 @@ begin
         Dec(TimeOut, i);
     end;
 end;
+
+
+
 
 
 function tHTTPClient.ReadLine: AnsiString;
@@ -449,11 +520,13 @@ begin
 end;
 
 
+
+
+
 begin
     HTTPClientDefaultMaxSize := 200 * 1024;
     HTTPClientDefaultUserAgent :=
-    'Acoon-Robot ' + cShortVersion + ' (http://www.acoon.de)';
+	'Acoon-Robot ' + cShortVersion + ' (http://www.acoon.de)';
     FailedCS := tCriticalSection.Create;
     FailedConnections := 0;
-
 end.

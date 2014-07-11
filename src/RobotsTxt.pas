@@ -17,6 +17,7 @@ unit RobotsTxt;
 interface
 
 uses
+    robotglobal,
     DNSResolver;
 
 const
@@ -41,13 +42,14 @@ function RobotsTxtGetIP(AUrl: shortstring): tIP4;
 implementation
 
 uses
+    {$ifdef Unix}
+    cthreads,
+    {$endif}
     SysUtils,
     {$ifdef DCC}
-    HTTPClient,
     Windows,
-    {$else}
-    HTTPClientFPC,
     {$endif}
+    httpget,
     Logging,
     Hash,
     GlobalTypes,
@@ -103,7 +105,7 @@ end;
 
 procedure tRobotsTxt.Execute;
 var
-    Cl: tHTTPClient;
+    Cl: tHttpGet;
     s: String;
     IsValidUA: boolean;
     Redirects: integer;
@@ -128,12 +130,14 @@ begin
 
     repeat
         DebugLogMsg('robot.log', 'RobotsTxt at "' + RobotsTxtUrl + '"');
-        Cl := tHTTPClient.Create(RobotsTxtUrl, ThisIP);
-        Cl.Start;
-        Cl.WaitForCompletion(30000);
+        Cl := tHttpGet.Create;
+	Cl.Host := CacheElement.HostName;
+	Cl.IP := CacheElement.IP;
+	Cl.Path := '/robots.txt';
+	Cl.Get;
 
         ReadyToExit := true;
-        if Cl.IsComplete and (Redirects < 5) then
+        if (Cl.ErrorCode = 0) and (Redirects < 5) then
         begin
             DebugLogMsg('robot.log', 'Actual StatusCode is ' + IntToStr(Cl.GetStatusCode));
             if (Cl.GetStatusCode = 301) or (Cl.GetStatusCode = 302) then
@@ -169,7 +173,7 @@ begin
     until ReadyToExit;
 
 
-    if Cl.IsComplete then
+    if Cl.ErrorCode = 0 then
     begin
         CacheElement.StatusCode := Cl.GetStatusCode;
 
@@ -373,7 +377,10 @@ begin
     else
     begin
         // DebugLogMsg('robot.log','StatusCode='+IntTostr(p.StatusCode)+' for "'+AUrl+'"');
-        if (p.StatusCode = 200) or (p.StatusCode = 404) or (p.StatusCode = 403) then Result := true
+        if
+	    (p.StatusCode = 200) or
+	    (p.StatusCode = 404) or
+	    (p.StatusCode = 403) then Result := true
         else Result := false;
     end;
 
