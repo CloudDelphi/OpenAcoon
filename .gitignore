@@ -12,3 +12,4 @@ dnscache.dat
 parser.err
 parser.log
 gendb.progress
+noresults.txt

@@ -1,4 +1,4 @@
 :start
-parser /-olinks /nobacklinks
-sleep 3
+bin\parser /-olinks /nobacklinks
+bin\sleep 3
 goto start
