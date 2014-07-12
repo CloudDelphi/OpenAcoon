@@ -75,8 +75,18 @@ type
 
     pRWIWorkChunk = ^tRWIWorkChunk;
 
+    tServerObject = class
+	public
+	    procedure IdHTTPServer1CommandGet(
+		AContext: TIdContext;
+		ARequestInfo: TIdHTTPRequestInfo;
+		AResponseInfo: TIdHTTPResponseInfo);
+    end;
+
+
 
 var
+    ServerObject: tServerObject;
     RankData: array [0 .. cDbCount - 1] of tRankDataArray;
     BackLinkData: array [0 .. cDbCount - 1] of tBackLinkDataArray;
     MaxBackLinkCount: int64;
@@ -1587,7 +1597,7 @@ begin
     WriteLn('Stats: ', 0.001 * Ticks / Searchs: 5: 3, 'ms/query');
     WriteLn('Stats: ', 0.001 * MaxTicks: 5: 3, 'ms max/query');
     WriteLn('Stats: ', 0.001 * MinTicks: 5: 3, 'ms min/query');
-    WriteLn('Stats: ', Counter, ' queries (', 100 * Counter div Searchs, '% cache-hits');
+    WriteLn('Stats: ', Counter, ' queries (', 100 * Counter div Searchs, '% cache-hits)');
 end;
 
 
@@ -1847,47 +1857,6 @@ begin
 end;
 
 
-procedure InitServer;
-var
-    i: integer;
-    s: string;
-    Binding: TIdSocketHandle;
-begin
-    IdHTTPServer1:=TIdHTTPServer.Create;
-    IdHTTPServer1.Bindings.Clear;
-    Binding := IdHTTPServer1.Bindings.Add;
-    Binding.IP := '0.0.0.0';
-    Binding.Port := 8081;
-    //IdHTTPServer1.DefaultPort := 8081;
-
-    i := 1;
-    while i <= ParamCount do
-    begin
-        s := LowerCase(ParamStr(i));
-        if (s = '-p') or (s = '-port') then
-        begin
-            Inc(i);
-            //IdHTTPServer1.DefaultPort := StrToIntDef(ParamStr(i), 8081);
-            Binding.Port := StrToIntDef(ParamStr(i), 8081);
-        end;
-
-        Inc(i);
-    end;
-    Randomize;
-    RefreshCachesCountdown := 0;
-    WriteLn('SearchServer ', cVersion);
-    WriteLn(cCopyright);
-
-    EmptyCache;
-    ResetStatistics;
-
-    cSData := '';
-    CheckDataPath;
-    if not IdHTTPServer1.Active then IdHTTPServer1.Active := true;
-end;
-
-
-
 procedure SetupQuery(Req: TIdHTTPRequestInfo; Res: TIdHTTPResponseInfo);
 var
     Ti, Ti2, Ti3: int64;
@@ -2020,13 +1989,58 @@ begin
 end;
 
 
-procedure IdHTTPServer1CommandGet(AContext: TIdContext;
+procedure tServerObject.IdHTTPServer1CommandGet(AContext: TIdContext;
     ARequestInfo: TIdHTTPRequestInfo;
     AResponseInfo: TIdHTTPResponseInfo);
 begin
     if AnsiLowerCase(ARequestInfo.Document) = '/query.html' then
         SetupQuery(ARequestInfo, AResponseInfo);
 end;
+
+
+procedure InitServer;
+var
+    i: integer;
+    s: string;
+    Binding: TIdSocketHandle;
+begin
+    ServerObject := tServerObject.Create;
+
+    IdHTTPServer1:=TIdHTTPServer.Create;
+    IdHTTPServer1.Bindings.Clear;
+    Binding := IdHTTPServer1.Bindings.Add;
+    Binding.IP := '0.0.0.0';
+    Binding.Port := 8081;
+    //IdHTTPServer1.DefaultPort := 8081;
+    IdHTTPServer1.OnCommandGet := ServerObject.IdHTTPServer1CommandGet;
+
+
+    i := 1;
+    while i <= ParamCount do
+    begin
+        s := LowerCase(ParamStr(i));
+        if (s = '-p') or (s = '-port') then
+        begin
+            Inc(i);
+            //IdHTTPServer1.DefaultPort := StrToIntDef(ParamStr(i), 8081);
+            Binding.Port := StrToIntDef(ParamStr(i), 8081);
+        end;
+
+        Inc(i);
+    end;
+    Randomize;
+    RefreshCachesCountdown := 0;
+    WriteLn('SearchServer ', cVersion);
+    WriteLn(cCopyright);
+
+    EmptyCache;
+    ResetStatistics;
+
+    cSData := '';
+    CheckDataPath;
+    if not IdHTTPServer1.Active then IdHTTPServer1.Active := true;
+end;
+
 
 
 begin

@@ -40,7 +40,7 @@ const
 {$endif}
 
     cShortVersion = '5.0.1';
-    cDate = '06-Jul-2014';
+    cDate = '12-Jul-2014';
     cVersion = cShortVersion + ' '+cIs64Bit+' '+cDate;
 
     cCopyright = '(c) 1999-2014 Acoon GmbH';
