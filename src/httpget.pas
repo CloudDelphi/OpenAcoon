@@ -221,7 +221,8 @@ end;
 procedure tHttpGet.ReceiveData;
 begin
     try
-	while (ErrorCode = 0) and (not Client.Socket.ClosedGracefully) do
+	while (ErrorCode = 0) and (Client.Socket.Connected) and
+	    (not Client.Socket.ClosedGracefully) do
 	    ReadChunk;
 
 	// Check for data once more. In my tests this was never
@@ -298,11 +299,21 @@ end;
 
 
 procedure tHttpGet.PopulateResponseBuffer;
+var
+    Tmp: TIdBytes;
 begin
     if Assigned(Client.Socket) then
 	if Assigned(Client.Socket.InputBuffer) then
 	begin
-	    ResponseBuffer := Client.Socket.InputBuffer.AsString;
+	    Client.Socket.InputBuffer.ExtractToBytes(
+		Tmp,
+		Client.Socket.InputBuffer.Size,
+		false,
+		0);
+	    SetLength(ResponseBuffer, Length(Tmp));
+	    if Length(Tmp)>0 then
+		Move(Tmp[0], ResponseBuffer[1], Length(Tmp));
+	    //ResponseBuffer := Client.Socket.InputBuffer.AsString;
 	    ResponseBufferIsValid := true;
 	end;
 end;
