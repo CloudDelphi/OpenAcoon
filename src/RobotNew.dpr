@@ -66,7 +66,7 @@ var
 begin
     DefaultCrawlDelay:=cThirtySeconds;
     IdleSeconds := 0;
-    MaxConnections := 10;
+    MaxConnections := 40;
     CurConnections := 0;
     AdjConn := 0;
     TotalBytes := 0;
