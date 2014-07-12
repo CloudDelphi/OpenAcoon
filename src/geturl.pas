@@ -53,6 +53,7 @@ type
 	OnComplete: procedure(var Buffer: array of byte; BufLen: int32);
 
         constructor Create(Info: tUrlInfo);
+	destructor Destroy; override;
     end;
 
 
@@ -79,12 +80,25 @@ constructor tGetUrl.Create(Info: tUrlInfo);
 begin
     inherited Create(false);
 
+    FreeOnTerminate := true;
     UrlInfo := Info;
     ThisHttpGet := nil;
     ErrorCode := 0;
 
+
     SetLength(Buffer, HTTPClientDefaultMaxSize);
     ClearBuffer;
+end;
+
+
+
+
+
+destructor tGetUrl.Destroy;
+begin
+    ThisHttpGet.Free;
+
+    inherited Destroy;
 end;
 
 
