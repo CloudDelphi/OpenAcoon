@@ -1,4 +1,4 @@
-unit RobotGetUrl;
+unit RobotGetUrlFPC;
 
 (*
     OpenAcoon - An OpenSource Internet-Search-Engine
@@ -17,47 +17,37 @@ unit RobotGetUrl;
 interface
 
 uses
-    ScktComp,
     SyncObjs,
+    httpget,
+    robotglobal,
     DNSResolver,
-	robotglobal,
     Classes;
 
 type
     tMyByteArray = array [0 .. 2000 * 1000 * 1000] of byte;
     pMyByteArray = ^tMyByteArray;
 
-    tUrlInfo = record
-        Port: integer;
-        Domain: shortstring;
-        Path: shortstring;
-        ModifiedStr: shortstring;
-        UrlPos: shortstring;
-        Url: shortstring;
-        OrgUrl: shortstring;
-    end;
 
+
+    (*
     tGetUrl = class(tThread)
     private
         UrlInfo: tUrlInfo;
-        Client: tClientSocket;
-        SocketStream: tWinSocketStream;
-        Buffer: pMyByteArray;
-        FSize: int32;
-        Request: array [0 .. 1030] of AnsiChar;
-        ReqLen: integer;
+        Client: tHttpGet;
         IP: tIP4;
+	FSize: int32;
         procedure ErrorAbort;
         procedure ErrorUnknownHost;
         procedure ClearBuffer;
         procedure WriteToBuffer(const s: AnsiString);
-        procedure AddRequest(const s: shortstring);
     protected
         procedure Execute; override;
         procedure Cleanup;
     public
         constructor Create(Info: tUrlInfo);
     end;
+    *)
+
 
 var
     CritSec: tCriticalSection;
@@ -68,9 +58,14 @@ var
     UrlNr: integer;
     UrlAn: integer;
     NewConns: integer;
+    UserAgent: string;
+
 
 
 procedure StartNewConnection;
+
+
+
 
 
 implementation
@@ -78,29 +73,49 @@ implementation
 uses
     FileLocation,
     MemoryPool,
-    HTTPClient,
+    //HTTPClientFPC,
     Logging,
     RobotsTxt,
     idGlobal,
+    geturl,
+    Config,
     SysUtils;
+
+
 
 const
     cMaxUrls = 100000000; // 100 million
+
+
 
 var
     OutputNumber: integer;
     Urls: array [1 .. cMaxUrls] of pShortString;
 
 
-// This procedure will be called from one of the tGetUrl objects.
-// CritSec must be ENTERed before (!) calling this procedure and
-// LEAVEd after calling it.
-procedure WriteOutput(var Buffer; Len: int32);
+
+
+(*
+    WriteOutput will be called from GetUrlComplete each time
+    a tGetUrl completes.
+
+    CritSec must be acquired before (!) calling this procedure and
+    released after calling it.
+
+    The purpose of this is to have a *single* write-operation.
+
+    Back when there were two writes (the size and the actual data)
+    this occasionally caused corrupted output. I have no idea why, as
+    the use of a tCriticalSection should have prevented that.
+*)
+procedure WriteOutput(var InBuffer: array of byte; Len: int32);
 var
     FNam: string;
+    OutBuffer: array of byte;
 begin
     if Len > 0 then
     begin
+	Inc(TotalBytes, Len);
         if not OutputOpen then
         begin
             Inc(OutputNumber);
@@ -112,29 +127,51 @@ begin
             OutputOpen := true;
         end;
 
-        Dec(Len, 4);
-        Move(Len, Buffer, 4);
-        // BlockWrite(OutputFile, Len, SizeOf(Len));
-        BlockWrite(OutputFile, Buffer, Len + 4);
+	SetLength(OutBuffer, Len + 4);
+	Move(Len, OutBuffer[0], 4);
+	Move(InBuffer[0], OutBuffer[4], Len);
+        BlockWrite(OutputFile, OutBuffer[0], Len +4);
     end;
 end;
+
+
+
+
+procedure GetUrlComplete(var Buffer: array of byte; BufLen: int32);
+begin
+    try
+        CritSec.Acquire;
+        try
+            if BufLen > 4 then
+                WriteOutput(Buffer, BufLen);
+        except
+        end;
+
+    finally
+	Dec(CurConnections);
+        CritSec.Release;
+
+    end;
+end;
+
 
 
 procedure StartNewConnection;
 var
     Info: tUrlInfo;
+    ThisGetUrl: tGetUrl;
     s: shortstring;
     i: integer;
 begin
     if UrlNr < UrlAn then
     begin
-        // CritSec.Enter;
-        // Inc(CurConnections);
-        tInterlocked.Increment(CurConnections);
+        CritSec.Enter;
+        Inc(CurConnections);
+        // tInterlocked.Increment(CurConnections);
         Inc(UrlNr);
         s := Urls[UrlNr]^;
         FreeMem(Urls[UrlNr]);
-        // CritSec.Leave;
+        CritSec.Leave;
 
         if Pos('/', s) = 0 then s := s + '/';
         i := Pos(#8, s);
@@ -187,11 +224,16 @@ begin
         Info.Domain := Trim(s);
 
         Inc(NewConns);
-        tGetUrl.Create(Info).Start;
+	ThisGetUrl := tGetUrl.Create(Info);
+	ThisGetUrl.OnComplete := GetUrlComplete;
+	ThisGetUrl.Start;
     end; { UrlNr<UrlAn }
 end;
 
 
+
+
+{$ifdef DoNotCompileThisAndRemoveItAfterRefactoring}
 procedure tGetUrl.Cleanup;
 begin
     try
@@ -199,24 +241,18 @@ begin
         try
             if (FSize > 4) and (Buffer <> nil) then
             begin
-                // if Buffer[3]<>0 then
                 WriteOutput(Buffer^, FSize);
-                // else LogMsg('robot.log','Debug: Prevented obviously corrupted output-buffer from being written.');
             end;
         except
         end;
     finally
+	Dec(CurConnections);
         CritSec.Leave;
-        tInterlocked.Decrement(CurConnections);
-    end;
-
-    try
-        MemPool(HTTPClientDefaultMaxSize).Release(Buffer);
-        Buffer := nil;
-    except
-        LogMsg('robot.log', 'Exception while releasing buffer');
     end;
 end;
+
+
+
 
 
 procedure tGetUrl.ClearBuffer;
@@ -228,15 +264,11 @@ end;
 procedure tGetUrl.ErrorAbort;
 begin
     try
-        Client.Close;
+        Client.Active:=false;
     except
     end;
     try
         Client.Free;
-    except
-    end;
-    try
-        SocketStream.Free;
     except
     end;
 
@@ -246,22 +278,24 @@ begin
 end;
 
 
+
+
+
 procedure tGetUrl.ErrorUnknownHost;
 begin
     WriteToBuffer('#ignore'#13#10);
     try
-        Client.Close;
+        Client.Active:=false;
     except
     end;
     try
         Client.Free;
     except
     end;
-    try
-        SocketStream.Free;
-    except
-    end;
 end;
+
+
+
 
 
 procedure tGetUrl.AddRequest(const s: shortstring);
@@ -272,6 +306,9 @@ begin
         Inc(ReqLen, Length(s));
     end;
 end;
+
+
+
 
 
 procedure tGetUrl.Execute;
@@ -285,8 +322,6 @@ var
     Retries: integer;
     RobotsTxtValid: boolean;
 begin
-    // SetThreadPriority(GetCurrentThread, THREAD_PRIORITY_BELOW_NORMAL);
-
     try
         Buffer := MemPool(HTTPClientDefaultMaxSize).Alloc;
     except
@@ -321,21 +356,6 @@ begin
         Inc(Retries);
     until CrawlDelayPassed or (Retries > 60);
 
-    {
-    CrawlDelayPassed:= RobotsTxtCrawlDelayPassedSinceLastAccess(UrlInfo.Url);
-    if not CrawlDelayPassed then
-    begin
-        ErrorAbort;
-        Cleanup;
-        (*
-        LogMsg('robot.log', 'Skipping "' + UrlInfo.Url +
-        '" because even after 10 minutes there was no time-window to access this host.');
-        *)
-        exit;
-    end;
- }
-
-
     RobotsTxtValid := RobotsTxtIsRobotsTxtValid(UrlInfo.Url);
     if not RobotsTxtValid then
     begin
@@ -347,14 +367,11 @@ begin
 
 
     try
-        Client := tClientSocket.Create(nil);
-        Client.ClientType := ctBlocking;
-        SocketStream := tWinSocketStream.Create(tCustomWinSocket(Client.Socket), 11000);
+        Client := tTCPClient.Create(nil);
 
         Client.Port := UrlInfo.Port;
-        // Client.Host := UrlInfo.Domain;
-        Client.Address := Ip2Str(RobotsTxtGetIP(UrlInfo.Domain));
-        if Client.Address = '0.0.0.0' then
+        Client.Host := Ip2Str(RobotsTxtGetIP(UrlInfo.Domain));
+        if Client.Host = '0.0.0.0' then
             LogMsg('robot.log', 'Internal Error: IP of "' + UrlInfo.Domain + '" is 0.0.0.0');
     except
         LogMsg('robot.log', 'Exception while setting up SocketStream');
@@ -364,7 +381,7 @@ begin
     end;
 
     try
-        Client.Open;
+        Client.Active:=true;
     except
         on E: eSocketError do
         begin
@@ -393,12 +410,7 @@ begin
         AddRequest('Host: ' + UrlInfo.Domain + #13#10);
         AddRequest('User-Agent: ' + HTTPClientDefaultUserAgent + #13#10);
         AddRequest('Accept: */*'#13#10);
-
         AddRequest('Accept-Language: de-de,de,en-us,en'#13#10);
-        // AddRequest('Accept-Language: en-us,en'#13#10);
-
-        (* if UrlInfo.ModifiedStr <> '' then
-            AddRequest('If-Modified-Since: ' + UrlInfo.ModifiedStr + #13#10); *)
         AddRequest(#13#10);
     except
         LogMsg('robot.log', 'Exception while setting up Request');
@@ -409,7 +421,7 @@ begin
     end;
 
     try
-        if SocketStream.Write(Request[0], ReqLen) <> ReqLen then
+        if Client.Stream.Write(Request[0], ReqLen) <> ReqLen then
         begin
             ErrorAbort;
             CountFailedConnection;
@@ -430,7 +442,7 @@ begin
             try
                 Ti1 := Ticks;
                 try
-                    Le := SocketStream.Read(s[1], 255);
+                    Le := Client.Stream.Read(s[1], 255);
                 except
                     ErrorAbort;
                     Cleanup;
@@ -460,15 +472,11 @@ begin
                     WriteToBuffer(UrlInfo.OrgUrl + #13#10);
                     WriteToBuffer('#ignore'#13#10);
                     try
-                        Client.Close;
+                        Client.Active:=false;
                     except
                     end;
                     try
                         Client.Free;
-                    except
-                    end;
-                    try
-                        SocketStream.Free;
                     except
                     end;
                     Cleanup;
@@ -490,7 +498,7 @@ begin
 
     Le := 0;
     try
-        Le := SocketStream.Read(s[1], 255);
+        Le := Client.Stream.Read(s[1], 255);
     except
         ErrorAbort;
         Cleanup;
@@ -515,15 +523,11 @@ begin
     end;
 
     try
-        Client.Close;
+        Client.Active:=false;
     except
     end;
     try
         Client.Free;
-    except
-    end;
-    try
-        SocketStream.Free;
     except
     end;
 
@@ -533,6 +537,9 @@ begin
         LogMsg('robot.log', 'Exception at final CleanUp in GetUrl.Execute');
     end;
 end;
+
+
+
 
 
 constructor tGetUrl.Create;
@@ -545,6 +552,9 @@ begin
 end;
 
 
+
+
+
 procedure tGetUrl.WriteToBuffer(const s: AnsiString);
 begin
     if Length(s) > 0 then
@@ -554,6 +564,8 @@ begin
         Inc(FSize, Length(s));
     end;
 end;
+{$endif}
+
 
 
 
@@ -578,12 +590,16 @@ begin
     CloseFile(f);
 end;
 
+
+
+
+
 begin
+    UserAgent := ConfigReadString('robot.useragent');
     CritSec := tCriticalSection.Create;
     OutputOpen := false;
     OutputNumber := 0;
     NewConns := 0;
     UrlNr := 0;
     LoadUrlList;
-
 end.

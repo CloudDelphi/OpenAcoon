@@ -20,7 +20,7 @@ uses
     Classes;
 
 type
-    tMemoryFile = class(tStream)
+    tMemoryFile = class
     strict private
         FPosition: int64;
         FSize: int64;
@@ -38,7 +38,7 @@ type
         destructor Destroy; override;
         property Position: int64 read FPosition write SetPosition;
         function Eof: boolean;
-        function Read(var Buffer; Count: Longint): Longint; override;
+        function Read(var Buffer; Count: int64): int64;
         procedure Write(var Buf; Len: int64);
         property Size: int64 read FSize write SetSize;
         function GetByte(Position: int64):byte;
@@ -146,7 +146,7 @@ begin
 end;
 
 
-function tMemoryFile.Read(var Buffer; Count: Longint): Longint;
+function tMemoryFile.Read(var Buffer; Count: int64): int64;
 begin
     InternalRead(Buffer,Count);
     Result:=Count;

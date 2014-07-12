@@ -1,4 +1,4 @@
-unit HTTPClient;
+unit HTTPClientFPC;
 
 (*
     OpenAcoon - An OpenSource Internet-Search-Engine
@@ -14,15 +14,20 @@ unit HTTPClient;
     GNU General Public License for more details.
 *)
 
+
+
 interface
 
 uses
+    {$ifdef Unix}
+    cthreads,
+    {$endif}
     Classes,
     GlobalTypes,
     MemoryFile,
-    ScktComp,
-	robotglobal,
-    DNSResolver;
+    fpsock,
+    fpasync,
+    robotglobal;
 
 type
     tHTTPClient = class(tThread)
@@ -32,8 +37,8 @@ type
         Position: int32;
         ResponseData: tMemoryFile;
         StatusCode: integer;
-        Client: tClientSocket;
-        SocketStream: tWinSocketStream;
+        Client: tTCPClient;
+	el: TEventLoop;
         Request: AnsiString;
         IP: tIP4;
 
@@ -56,31 +61,41 @@ type
         procedure Seek(APosition: int32);
         function FilePos: int32;
         function ReadLine: AnsiString;
-        function GetResponse: RawByteString;
+        function GetResponse: AnsiString;
         function Eof: boolean;
         procedure WaitForCompletion(TimeOut: int32); // TimeOut in MilliSekunden
     end;
 
-var
-    HTTPClientDefaultMaxSize: int32;
-    HTTPClientDefaultUserAgent: AnsiString;
+
+
+
+
 
 procedure CountFailedConnection;
 function GetAndResetFailedConnectionCount: integer;
+
+
+
+// --------------------------------------------------------------------------
+
 
 
 implementation
 
 uses
     SysUtils,
-    Windows,
     Logging,
     IdGlobal,
     SyncObjs;
 
+
+
 var
     FailedCS: tCriticalSection;
     FailedConnections: integer;
+
+
+
 
 
 procedure CountFailedConnection;
@@ -92,6 +107,8 @@ end;
 
 
 
+
+
 function GetAndResetFailedConnectionCount: integer;
 begin
     FailedCS.Enter;
@@ -99,6 +116,8 @@ begin
     FailedConnections := 0;
     FailedCS.Leave;
 end;
+
+
 
 
 
@@ -113,6 +132,9 @@ begin
     end;
     Result := true;
 end;
+
+
+
 
 
 constructor tHTTPClient.Create(AUrl: AnsiString; ThisIP: tIP4);
@@ -134,11 +156,17 @@ begin
 end;
 
 
+
+
+
 destructor tHTTPClient.Destroy;
 begin
     ResponseData.Free;
     inherited;
 end;
+
+
+
 
 
 function tHTTPClient.Eof: boolean;
@@ -147,13 +175,16 @@ begin
 end;
 
 
+
+
+
 procedure tHTTPClient.Shutdown;
 begin
     try
         DebugLogMsg('robot.log', '20');
         // if Client.Active then DebugLogMsg('robot.log','IsActive')
         // else DebugLogMsg('robot.log','NOTActive');
-        if Client.Active then Client.Close;
+        if Client.Active then Client.Active:=false;
         DebugLogMsg('robot.log', '21');
     except
     end;
@@ -161,7 +192,6 @@ begin
 
     try
         DebugLogMsg('robot.log', '24');
-        if Assigned(SocketStream) then FreeAndNil(SocketStream);
         DebugLogMsg('robot.log', '25');
     except
         DebugLogMsg('robot.log', '25a');
@@ -181,6 +211,9 @@ begin
 end;
 
 
+
+
+
 procedure tHTTPClient.ErrorAbort(ErrCode: integer);
 begin
     if ErrCode >= 996 then CountFailedConnection;
@@ -194,10 +227,16 @@ begin
 end;
 
 
+
+
+
 procedure tHTTPClient.ErrorUnknownHost;
 begin
     ErrorAbort(404); // "Not found"
 end;
+
+
+
 
 
 procedure tHTTPClient.Execute;
@@ -235,16 +274,18 @@ begin
     // mtInformation, [mbOk], 0, mbOk);
 
     try
-        Client := tClientSocket.Create(nil);
-        Client.ClientType := ctBlocking;
-        SocketStream := tWinSocketStream.Create(tCustomWinSocket(Client.Socket), 11000);
+        Client := tTCPClient.Create(nil);
+	el := TEventLoop.Create;
+	Client.EventLoop := el;
+
+        DebugLogMsg('robot.log', 'Port=' + IntToStr(Port));
         Client.Port := Port;
         DebugLogMsg('robot.log', Host + ' is pre-resolved to ' + Ip2Str(IP));
-        if IP.IP <> 0 then Client.Address := Ip2Str(IP)
+        if IP.IP <> 0 then Client.Host := Ip2Str(IP)
         else Client.Host := Host;
 
         try
-            Client.Open;
+            Client.Active:=true;
         except
             on E: eSocketError do
             begin
@@ -259,6 +300,7 @@ begin
                 exit;
             end;
         end;
+	el.Run;
 
 
         Request :=
@@ -272,7 +314,7 @@ begin
 
         try
             Le := Length(Request);
-            if SocketStream.Write(Request[1], Le) <> Le then
+            if Client.Stream.Write(Request[1], Le) <> Le then
             begin
                 ErrorAbort(997);
                 exit;
@@ -331,6 +373,9 @@ begin
 end;
 
 
+
+
+
 function tHTTPClient.ReadFromStream(var s: shortstring; ErrCode: integer): integer;
 var
     Ti1: int64;
@@ -340,7 +385,7 @@ begin
     Le := 0;
     try
         DebugLogMsg('robot.log', '1');
-        Le := SocketStream.Read(s[1], 255);
+        Le := Client.Stream.Read(s[1], 255);
         DebugLogMsg('robot.log', '2');
     except
         DebugLogMsg('robot.log', '4');
@@ -366,10 +411,15 @@ begin
 end;
 
 
+
+
+
 function tHTTPClient.FilePos: int32;
 begin
     Result := Position;
 end;
+
+
 
 
 (*
@@ -385,7 +435,9 @@ end;
 *)
 
 
-function tHTTPClient.GetResponse: RawByteString;
+
+
+function tHTTPClient.GetResponse: AnsiString;
 begin
     SetLength(Result, ResponseData.Size);
     ResponseData.Position := 0;
@@ -395,10 +447,15 @@ end;
 
 
 
+
+
 function tHTTPClient.GetStatusCode: integer;
 begin
     Result := StatusCode;
 end;
+
+
+
 
 
 function tHTTPClient.IsComplete: boolean;
@@ -407,18 +464,24 @@ begin
 end;
 
 
+
+
+
 procedure tHTTPClient.Seek(APosition: int32);
 begin
     Position := APosition + 1;
 end;
 
 
+
+
+
 procedure tHTTPClient.WaitForCompletion(TimeOut: int32);
 var
     i: integer;
 begin
-    // while (not IsComplete) and (TimeOut > 0) do
-    while (not Finished) and (TimeOut > 0) do
+    while (not IsComplete) and (TimeOut > 0) do
+    // while (not Finished) and (TimeOut > 0) do
     begin
         i := TimeOut;
         if i > 100 then i := 100;
@@ -426,6 +489,9 @@ begin
         Dec(TimeOut, i);
     end;
 end;
+
+
+
 
 
 function tHTTPClient.ReadLine: AnsiString;
@@ -454,11 +520,13 @@ begin
 end;
 
 
+
+
+
 begin
     HTTPClientDefaultMaxSize := 200 * 1024;
     HTTPClientDefaultUserAgent :=
-    'Acoon-Robot ' + cShortVersion + ' (http://www.acoon.de)';
+	'Acoon-Robot ' + cShortVersion + ' (http://www.acoon.de)';
     FailedCS := tCriticalSection.Create;
     FailedConnections := 0;
-
 end.

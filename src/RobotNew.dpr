@@ -17,17 +17,31 @@ program RobotNew;
 {$APPTYPE CONSOLE}
 
 uses
+    {$ifdef DCC}
+	HTTPClient in 'HTTPClient.pas',
+	RobotGetUrl in 'RobotGetUrl.pas',
+    {$else}
+	httpget,
+	geturl,
+
+	{$ifdef Unix}
+	    cthreads,
+	    cmem,
+	{$endif}
+
+	//HTTPClientFPC,
+	RobotGetUrlFPC,
+    {$endif}
+
     SysUtils,
-    Windows,
+    robotglobal,
     RobotsTxt in 'RobotsTxt.pas',
-    HTTPClient in 'HTTPClient.pas',
     DNSResolver in 'DNSResolver.pas',
     Hash in 'Hash.pas',
     Logging in 'Logging.pas',
     GlobalTypes in 'GlobalTypes.pas',
     MemoryFile in 'MemoryFile.pas',
     MemoryPool in 'MemoryPool.pas',
-    RobotGetUrl in 'RobotGetUrl.pas',
     FileLocation in 'FileLocation.pas',
     Config in 'Config.pas',
     OSWrapper in 'OSWrapper.pas';
@@ -77,8 +91,6 @@ begin
     s := ConfigReadString('robot.useragent');
     if s <> '' then HTTPClientDefaultUserAgent := s;
 
-    SetThreadPriority(GetCurrentThread, THREAD_PRIORITY_ABOVE_NORMAL);
-
     StartTi := GetTickCount;
     LastTick := StartTi;
 end;
@@ -102,6 +114,7 @@ end;
 procedure HaltRobot;
 begin
     CloseOutputFile;
+    WriteLn;
     halt;
 end;
 
@@ -184,13 +197,14 @@ begin
         // Label17.Caption := IntToStr(NewConns) + '/' + s;
 
 
-
+	(*
         FailedCounter := (FailedCounter + 1) mod 60;
         LastFailed[FailedCounter] := GetAndResetFailedConnectionCount;
         FailedSum := 0;
         for i := 0 to 59 do
             Inc(FailedSum, LastFailed[i]);
         Str(1.0 * FailedSum / 60.0: 4: 2, s);
+	*)
         // Label18.Caption := IntToStr(LastFailed[FailedCounter]) + '/' + s;
 
     except

@@ -8,3 +8,8 @@ bin/
 data/
 .directory
 ImportUrls.rr
+dnscache.dat
+parser.err
+parser.log
+gendb.progress
+noresults.txt

@@ -24,7 +24,7 @@ uses
     DomainRank in 'DomainRank.pas',
     Words in 'Words.pas';
 
-{$R *.RES}
+{$R *.res}
 
 
 begin

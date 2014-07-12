@@ -18,11 +18,13 @@ function EncodeUrl2(s: string): string;
 implementation
 
 uses
+    {$IfNDef Unix}
     Windows,
+    {$EndIf}
     SysUtils;
 
 
-
+{$IfDef DCC}
 function GetEnv(name: pchar): string;
 var
     Txt: array [0 .. 10000] of char;
@@ -31,6 +33,12 @@ begin
     GetEnvironmentVariable(name, Txt, 10000);
     Result := StrPas(Txt);
 end;
+{$Else}
+function GetEnv(name: string): string;
+begin
+    Result:= GetEnvironmentVariable(Name);
+end;
+{$EndIf}
 
 
 function DecodeUrl(s: string): string;

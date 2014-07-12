@@ -1,7 +1,9 @@
-{$A+,B-,C+,D+,E-,F-,G+,H+,I+,J+,K-,L+,M-,N+,O+,P+,Q-,R-,S-,T-,U-,V+,W-,X+,Y-,Z1}
-{$MINSTACKSIZE $00004000}
-{$MAXSTACKSIZE $00100000}
-{$IMAGEBASE $00400000}
+{$IfDef DCC}
+    {$A+,B-,C+,D+,E-,F-,G+,H+,I+,J+,K-,L+,M-,N+,O+,P+,Q-,R-,S-,T-,U-,V+,W-,X+,Y-,Z1}
+    {$MINSTACKSIZE $00004000}
+    {$MAXSTACKSIZE $00100000}
+    {$IMAGEBASE $00400000}
+{$EndIf}
 {$APPTYPE CONSOLE}
 program query;
 
@@ -15,7 +17,7 @@ uses
     KillThread,
     SearchResults,
     NewSearch,
-    Windows,
+    OSWrapper,
     PostProcess;
 
 const
@@ -364,7 +366,6 @@ var
     StartTick: uint32;
     SearchThread: tNewSearchThread;
     SrOut: tSearchResults;
-    query: string;
 begin
     TKillThread.Create(35); // End this process after 35 seconds no matter what
 
