@@ -15,12 +15,14 @@ program searchservernew;
 *)
 
 uses
+    {$ifdef Unix}
+    cthreads,
+    cmem,
+    {$endif}
     OSWrapper,
     SysUtils,
     Classes,
-    //IdBaseComponent,
-    //IdComponent,
-    //IdCustomTCPServer,
+    IdSocketHandle,
     IdCustomHTTPServer,
     IdHTTPServer,
     IdContext,
@@ -73,8 +75,18 @@ type
 
     pRWIWorkChunk = ^tRWIWorkChunk;
 
+    tServerObject = class
+	public
+	    procedure IdHTTPServer1CommandGet(
+		AContext: TIdContext;
+		ARequestInfo: TIdHTTPRequestInfo;
+		AResponseInfo: TIdHTTPResponseInfo);
+    end;
+
+
 
 var
+    ServerObject: tServerObject;
     RankData: array [0 .. cDbCount - 1] of tRankDataArray;
     BackLinkData: array [0 .. cDbCount - 1] of tBackLinkDataArray;
     MaxBackLinkCount: int64;
@@ -1465,7 +1477,9 @@ begin
         f := tCacheFile.Create;
         f.Assign(cSData + 'rank.dat' + IntToStr(i));
         f.Reset;
-        SetLength(RankData[i], f.FileSize div 4);
+	j := f.FileSize;
+	if j < 4 then j := 4;
+        SetLength(RankData[i], j);
         f.Read(RankData[i][0], f.FileSize);
         for j := 0 to High(RankData[i]) do
         begin
@@ -1478,7 +1492,9 @@ begin
         f := tCacheFile.Create;
         f.Assign(cSData + 'rank2.dat' + IntToStr(i));
         f.Reset;
-        SetLength(UrlData[i], f.FileSize);
+	j := f.FileSize;
+	if j < 1 then j := 1;
+        SetLength(UrlData[i], j);
         f.Read(UrlData[i][0], f.FileSize);
         f.Close;
         f.Free;
@@ -1488,7 +1504,9 @@ begin
         f := tCacheFile.Create;
         f.Assign(cSData + 'backlink.dat' + IntToStr(i));
         f.Reset;
-        SetLength(BackLinkData[i], f.FileSize div 8);
+	j := f.FileSize;
+	if j < 8 then j := 8;
+        SetLength(BackLinkData[i], j div 8);
         f.Read(BackLinkData[i][0], f.FileSize);
         for j := 0 to High(BackLinkData[i]) do
         begin
@@ -1579,7 +1597,7 @@ begin
     WriteLn('Stats: ', 0.001 * Ticks / Searchs: 5: 3, 'ms/query');
     WriteLn('Stats: ', 0.001 * MaxTicks: 5: 3, 'ms max/query');
     WriteLn('Stats: ', 0.001 * MinTicks: 5: 3, 'ms min/query');
-    WriteLn('Stats: ', Counter, ' queries (', 100 * Counter div Searchs, '% cache-hits');
+    WriteLn('Stats: ', Counter, ' queries (', 100 * Counter div Searchs, '% cache-hits)');
 end;
 
 
@@ -1839,40 +1857,6 @@ begin
 end;
 
 
-procedure InitServer;
-var
-    i: integer;
-    s: string;
-begin
-    IdHTTPServer1:=TIdHTTPServer.Create;
-    IdHTTPServer1.DefaultPort := 8081;
-    i := 1;
-    while i <= ParamCount do
-    begin
-        s := LowerCase(ParamStr(i));
-        if (s = '-p') or (s = '-port') then
-        begin
-            Inc(i);
-            IdHTTPServer1.DefaultPort := StrToIntDef(ParamStr(i), 8081);
-        end;
-
-        Inc(i);
-    end;
-    Randomize;
-    RefreshCachesCountdown := 0;
-    WriteLn('SearchServer ', cVersion);
-    WriteLn(cCopyright);
-
-    EmptyCache;
-    ResetStatistics;
-
-    cSData := '';
-    CheckDataPath;
-    if not IdHTTPServer1.Active then IdHTTPServer1.Active := true;
-end;
-
-
-
 procedure SetupQuery(Req: TIdHTTPRequestInfo; Res: TIdHTTPResponseInfo);
 var
     Ti, Ti2, Ti3: int64;
@@ -2005,7 +1989,7 @@ begin
 end;
 
 
-procedure IdHTTPServer1CommandGet(AContext: TIdContext;
+procedure tServerObject.IdHTTPServer1CommandGet(AContext: TIdContext;
     ARequestInfo: TIdHTTPRequestInfo;
     AResponseInfo: TIdHTTPResponseInfo);
 begin
@@ -2014,7 +1998,53 @@ begin
 end;
 
 
+procedure InitServer;
+var
+    i: integer;
+    s: string;
+    Binding: TIdSocketHandle;
+begin
+    ServerObject := tServerObject.Create;
+
+    IdHTTPServer1:=TIdHTTPServer.Create;
+    IdHTTPServer1.Bindings.Clear;
+    Binding := IdHTTPServer1.Bindings.Add;
+    Binding.IP := '0.0.0.0';
+    Binding.Port := 8081;
+    //IdHTTPServer1.DefaultPort := 8081;
+    IdHTTPServer1.OnCommandGet := ServerObject.IdHTTPServer1CommandGet;
+
+
+    i := 1;
+    while i <= ParamCount do
+    begin
+        s := LowerCase(ParamStr(i));
+        if (s = '-p') or (s = '-port') then
+        begin
+            Inc(i);
+            //IdHTTPServer1.DefaultPort := StrToIntDef(ParamStr(i), 8081);
+            Binding.Port := StrToIntDef(ParamStr(i), 8081);
+        end;
+
+        Inc(i);
+    end;
+    Randomize;
+    RefreshCachesCountdown := 0;
+    WriteLn('SearchServer ', cVersion);
+    WriteLn(cCopyright);
+
+    EmptyCache;
+    ResetStatistics;
+
+    cSData := '';
+    CheckDataPath;
+    if not IdHTTPServer1.Active then IdHTTPServer1.Active := true;
+end;
+
+
+
 begin
     CritSec := tCriticalSection.Create;
     InitServer;
+    while true do ;
 end.

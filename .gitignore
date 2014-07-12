@@ -11,3 +11,4 @@ ImportUrls.rr
 dnscache.dat
 parser.err
 parser.log
+gendb.progress

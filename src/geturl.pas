@@ -22,6 +22,7 @@ uses
     cthreads,
     {$endif}
     Classes,
+    IdGlobal,
     robotglobal,
     httpget;
 
@@ -38,7 +39,9 @@ type
 	ErrorCode: integer;
 
         procedure ClearBuffer;
-        procedure WriteToBuffer(const s: AnsiString);
+        procedure WriteToBuffer(const s: AnsiString); overload;
+	procedure WriteToBuffer(var Data: tIdBytes); overload;
+	procedure WriteBogusErrorMessageToBuffer;
 	function BufferSize:int32;
 	procedure CheckRobotsTxt;
 	procedure CheckCrawlDelay;
@@ -115,6 +118,23 @@ end;
 
 
 
+procedure tGetUrl.WriteToBuffer(var Data: tIdBytes);
+begin
+    if (FSize + Length(Data)) <= BufferSize then
+    begin
+	Move(Data[0], Buffer[FSize], Length(Data));
+	Inc(FSize, Length(Data));
+    end
+    else
+    begin
+	ErrorCode := 1;
+    end;
+end;
+
+
+
+
+
 function tGetUrl.BufferSize:int32;
 begin
     Result := High(Buffer)+1;
@@ -168,6 +188,23 @@ begin
         if not CrawlDelayPassed then Sleep(5000);
 
     until CrawlDelayPassed or (Retries > 60);
+
+    if Retries > 60 then
+    begin
+	ErrorCode := 5;
+	WriteBogusErrorMessageToBuffer;
+    end;
+end;
+
+
+
+
+
+procedure tGetUrl.WriteBogusErrorMessageToBuffer;
+begin
+    // Yes, the error-message is misleading. But it causes the software
+    // to simply assume a temporary error and try again later.
+    WriteToBuffer('File transfer timed-out.'#13#10);
 end;
 
 
@@ -184,10 +221,7 @@ begin
 	    UrlInfo.Url + '".');
 
 	ErrorCode := 3;
-
-	// Yes, the error-message is misleading. But it causes the software
-	// to simply assume a temporary error and try again later.
-	WriteToBuffer('File transfer timed-out.'#13#10);
+	WriteBogusErrorMessageToBuffer;
     end;
 end;
 
@@ -196,20 +230,41 @@ end;
 
 
 procedure tGetUrl.FetchUrl;
+var
+    Data: tIdBytes;
 begin
     ThisHttpGet := tHttpGet.Create;
     ThisHttpGet.Host := UrlInfo.Domain;
     ThisHttpGet.IP := RobotsTxtGetIP(UrlInfo.Domain);
     ThisHttpGet.Path := UrlInfo.Path;
     ThisHttpGet.Port := UrlInfo.Port;
+    ThisHttpGet.UserAgent := HTTPClientDefaultUserAgent;
     ThisHttpGet.AcceptLanguage := 'de-de,de,en-us,en';
 
     ThisHttpGet.Get;
 
     if ThisHttpGet.ErrorCode = 0 then
-	WriteToBuffer(ThisHttpGet.Client.Socket.InputBuffer.AsString)
+    begin
+	ThisHttpGet.Client.Socket.InputBuffer.ExtractToBytes(
+	    Data,
+	    ThisHttpGet.Client.Socket.InputBuffer.Size,
+	    false,
+	    0);
+
+	//WriteToBuffer(ThisHttpGet.Client.Socket.InputBuffer.AsString);
+	WriteToBuffer(Data);
+	if ErrorCode > 0 then
+	begin
+	    ClearBuffer;
+	    WriteToBuffer('#ignore'#13#10);
+	    WriteToBuffer('#Response too big'#13#10);
+	end;
+    end
     else
+    begin
 	ErrorCode := 4;
+	WriteBogusErrorMessageToBuffer;
+    end;
 end;
 
 
