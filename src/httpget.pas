@@ -333,7 +333,7 @@ end;
 
 function tHttpGet.ReadLine: AnsiString;
 var
-    c: char;
+    c: AnsiChar;
 begin
     Result := '';
 

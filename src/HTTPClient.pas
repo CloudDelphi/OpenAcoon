@@ -21,6 +21,7 @@ uses
     GlobalTypes,
     MemoryFile,
     ScktComp,
+	robotglobal,
     DNSResolver;
 
 type

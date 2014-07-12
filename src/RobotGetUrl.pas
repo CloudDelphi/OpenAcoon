@@ -20,6 +20,7 @@ uses
     ScktComp,
     SyncObjs,
     DNSResolver,
+	robotglobal,
     Classes;
 
 type
