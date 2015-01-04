@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 echo "Starting Linux build of OpenAcoon..."
 echo "------------------------------------"
 rm src/*.o
