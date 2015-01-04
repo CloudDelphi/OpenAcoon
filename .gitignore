@@ -5,6 +5,7 @@ bin/
 *.dproj.local
 *.o
 *.ppu
+*.rst
 data/
 .directory
 ImportUrls.rr
