@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 echo "Starting Linux build of OpenAcoon..."
 echo "------------------------------------"
 rm src/*.o
@@ -9,14 +9,22 @@ mkdir bin
 rm bin/*
 set -e
 
-# You will probably need to change the -Fl parameter below to point
-# to where you have indy10
-compiler="fpc -Mdelphi -Tlinux -O3 -vew -Sew -vq -Fu~/sources/indy10/ -Fu/usr/lib64/lazarus/lcl/units/x86_64-linux/ -Fu/usr/lib64/lazarus/components/lazutils/lib/x86_64-linux/"
+# You will probably need to change directory names to match your setup
+fpc_src="/usr/share/fpcsrc/2.6.2/packages/"
+compiler="fpc -Mdelphi -Tlinux -O3 -vew -vq"
+compiler=$compiler" -Fu/data_b/source/indy10/Lib/*"
+compiler=$compiler" -Fu${fpc_src}fcl-base/src"
+compiler=$compiler" -Fu${fpc_src}fcl-net/src"
+compiler=$compiler" -Fu${fpc_src}iconvenc/src"
+compiler=$compiler" -FE."
 
 
 function compile {
     $compiler $1.dpr
-    mv $1 ../bin
+    if [ -e "$1" ]
+    then
+        mv $1 ../bin
+    fi
     echo -e '\n'
 }
 
@@ -33,6 +41,7 @@ compile Sleep
 compile Parser
 compile GenDb
 compile cgi/query
+mv query ../bin
 #compile Robot
 #compile SearchServer
 
