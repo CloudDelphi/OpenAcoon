@@ -9,15 +9,15 @@ mkdir bin
 rm bin/*
 set -e
 
-# You will probably need to change the -Fl parameter below to point
-# to where you have indy10
+# You will probably need to change directory names to match your setup
+fpc_src="/usr/share/fpcsrc/2.6.2/packages/"
 compiler="fpc -Mdelphi -Tlinux -O3 -vew -vq"
 compiler=$compiler" -Fu/data_b/source/indy10/Lib/*"
-compiler=$compiler" -Fu/usr/share/fpcsrc/2.6.2/packages/fcl-base/src"
-compiler=$compiler" -Fu/usr/share/fpcsrc/2.6.2/packages/fcl-net/src"
-compiler=$compiler" -Fu/usr/share/fpcsrc/2.6.2/packages/iconvenc/src"
+compiler=$compiler" -Fu${fpc_src}fcl-base/src"
+compiler=$compiler" -Fu${fpc_src}fcl-net/src"
+compiler=$compiler" -Fu${fpc_src}iconvenc/src"
 compiler=$compiler" -FE."
-echo $compiler
+
 
 function compile {
     $compiler $1.dpr
