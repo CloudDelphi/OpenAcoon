@@ -30,7 +30,9 @@ uses
     WinSock,
     Windows,
     {$Else}
-    NetDb,
+	{$IfDef FPC}
+	NetDb,
+	{$EndIf}
     {$EndIf}
     OSWrapper,
     Logging,
