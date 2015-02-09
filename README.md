@@ -2,7 +2,7 @@
 
 This is a web search-engine that can easily hold a few hundred million web-pages
 in its search-index. If you want to see what it can do see
-https://www.acoon.de/en/
+https://deusu.org/
 
 The above website runs on an Intel i7-3770K with 32gb RAM and two 500gb SSDs.
 The search-index on that site currently holds about 327 million WWW-pages.
@@ -24,3 +24,6 @@ I feel a LOT better about the quality of my own sourcecode now... :) ]
 As of 12-Jul-2014 the master branch will compile with FreePascal on Linux.
 I have tested it a bit and it at least *seems* to work. That of course does
 *not* mean that it is bug-free. :)
+
+To compile with FreePascal you may need to change a pathname in build-linux.sh,
+so that FPC will find all the necessary files.
