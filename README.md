@@ -27,3 +27,16 @@ I have tested it a bit and it at least *seems* to work. That of course does
 
 To compile with FreePascal you may need to change a pathname in build-linux.sh,
 so that FPC will find all the necessary files.
+
+#### Compiling with FreePascal for Windows
+
+As of 09-Feb-2015 the master branch will compile with FreePascal for Windows.
+
+On Windows use "build-windows-fpc.bat" to compile.
+
+You can even use FPC to cross-compile on Linux to Windows. In that case use
+"build-windows-on-linux.sh". You will have to manually compile FPC to enable
+it to cross-compile of course. This is a bit tricky... :)
+
+In both cases you will probably have to adjust some compiler-options
+in the the bat/sh file to let FPC know about the path to its libraries.
