@@ -26,13 +26,11 @@ function GetIP4ByHostName(const AHostName: AnsiString): tIP4;
 implementation
 
 uses
-    {$IfDef WINDOWS}
+    {$IfDef DCC}
     WinSock,
     Windows,
     {$Else}
-	{$IfDef FPC}
 	NetDb,
-	{$EndIf}
     {$EndIf}
     OSWrapper,
     Logging,
@@ -128,7 +126,7 @@ end;
 
 function ResolveHostByNameIPv4(const aHostName: AnsiString): tIP4;
 var
-    {$IfDef WINDOWS}
+    {$IfDef DCC}
     HostName: array [0 .. 255] of AnsiChar;
     HostEnt: pHostEnt;
 	IPCount: integer;
@@ -141,7 +139,7 @@ var
     {$EndIf}
     i: integer;
 begin
-    {$IfDef WINDOWS}
+    {$IfDef DCC}
     StrPCopy(HostName, AHostName);
     HostEnt := GetHostByName(HostName);
     if HostEnt <> nil then
@@ -210,7 +208,7 @@ begin
 end;
 
 
-{$IfDef WINDOWS}
+{$IfDef DCC}
 procedure Startup;
 var
     ErrorCode: integer;
@@ -224,7 +222,7 @@ end;
 begin
     CritSec := tCriticalSection.Create;
     LoadCacheData;
-    {$IfDef WIN}
+    {$IfDef DCC}
     Startup;
     {$EndIf}
 
