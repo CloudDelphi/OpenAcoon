@@ -9,13 +9,14 @@ mkdir bin
 rm bin/*
 set -e
 
-# You will probably need to change directory names to match your setup
-fpc_src="/usr/share/fpcsrc/2.6.2/packages/"
 compiler="fpc -Mdelphi -Tlinux -O3 -vew -vq"
-compiler=$compiler" -Fu/data_b/source/indy10/Lib/*"
-compiler=$compiler" -Fu${fpc_src}fcl-base/src"
-compiler=$compiler" -Fu${fpc_src}fcl-net/src"
-compiler=$compiler" -Fu${fpc_src}iconvenc/src"
+compiler=$compiler" -Fudep/indy10/Lib/*"
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#
+# You will probably need to change the path in the following line to match your setup
+#
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+compiler=$compiler" -Fu/usr/lib64/fpc/2.6.4/units/x86_64-linux/*"
 compiler=$compiler" -FE."
 
 
