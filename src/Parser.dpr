@@ -57,7 +57,7 @@ var
     s: string;
 
 begin
-    {$ifndef Unix}
+    {$ifdef DCC}
     System.NeverSleepOnMMThreadContention := true;
     {$endif}
     WriteLn('Parser ', cVersionCopy);

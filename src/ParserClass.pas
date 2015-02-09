@@ -26,7 +26,7 @@ type
     pCharArr = ^tCharArr;
 
     tParserClass = class(tThread)
-        {$ifdef Unix}
+        {$ifndef DCC}
         Finished: boolean;
         {$endif}
 
@@ -86,7 +86,7 @@ uses
     SysUtils,
     Types,
     {$ifndef Unix}
-    IOUtils,
+    //IOUtils,
     {$else}
     OSWrapper,
     {$endif}
@@ -154,7 +154,7 @@ end;
 constructor tParserClass.Create(AFileMask, Language: string; DoFollowLinks, DoBackLinks: boolean; AMaxBufLen: integer);
 begin
     inherited Create(true);
-    {$ifdef Unix}
+    {$ifndef DCC}
     Finished:=false;
     {$endif}
 
@@ -1400,7 +1400,7 @@ begin
 
     FreeMem(TxtBuf);
 
-    {$ifdef Unix}
+    {$ifndef DCC}
     Finished:=true;
     {$endif}
 end;
