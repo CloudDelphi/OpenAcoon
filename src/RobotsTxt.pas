@@ -24,6 +24,7 @@ const
     cMaxRobotsHash = 1024 * 1024 - 1;
     cOneMinute = 1.0 / 24.0 / 60.0;
     cFiveSeconds = cOneMinute / 60.0 * 5.0;
+    cTenSeconds = cOneMinute / 60.0 * 10.0;
     cTwentySeconds = cOneMinute / 60.0 * 20.0;
     cThirtySeconds = cOneMinute / 60.0 * 30.0;
 

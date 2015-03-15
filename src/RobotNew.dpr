@@ -64,7 +64,7 @@ procedure Init;
 var
     s: string;
 begin
-    DefaultCrawlDelay:=cThirtySeconds;
+    DefaultCrawlDelay:=cTenSeconds;
     IdleSeconds := 0;
     MaxConnections := 40;
     CurConnections := 0;
