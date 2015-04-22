@@ -125,18 +125,31 @@ var
     Dots, i: integer;
 begin
     if s = '' then exit;
+
+
+    // We do NOT want to crawl the update-history of wikipedia
+    s2 := LowerCase(s);
+    if (Pos('.wikipedia.org',s2)>0) and (Pos('curid=',s2)>0) then exit;
+
+
     if Pos(#255, s) > 0 then exit; { URLs die ASCII 255 enthalten dürfen hier nicht weiter }
     if Pos('/', s) > 0 then { Einen "/" sollten eigentlich alle URLs enthalten, aber sicher ist sicher }
     begin
         HostName := LowerCase(copy(s, 1, Pos('/', s) - 1)); { Wir wollen nur den Hostnamen komplett in Kleinbuchstaben }
 
         SLD := HostName;
+	(*
+	    This code was used to reduce the hostname to a 2nd-level
+	    domain. I *think* it's better to use the hostname instead.
+	    TODO: This should be completely removed once it is clear
+	    that this change is actually correct.
         repeat
             Dots := 0;
             for i := 1 to Length(SLD) do
                 if SLD[i] = '.' then Inc(Dots);
             if Dots > 1 then Delete(SLD, 1, Pos('.', SLD));
         until Dots <= 2;
+	*)
 
         HashCode := CalcCRC(SLD) and cMaxHostHash; { HashCode für den Hostnamen bilden }
         p2 := HostList[HashCode]; { Zum Anfang der Liste für diesen HashCode }
@@ -157,21 +170,26 @@ begin
             p2^.Name := SLD; { Hostnamen im Listeneintrag speichern }
             HostList[HashCode] := p2; { Listenanfang zeigt jetzt auf das neue Element }
         end;
-        if (p2^.An >= MaxUrlsPerHost) and
+
+
+	(*
+	    There used to be a special-case for certain domains. These
+	    were allowed to be crawled more often than others.
+	    I no longer consider this to be good behaviour.
+	    TODO: The commented-out code below needs to be removed once
+	    it is clear that this change is correct.
+	*)
+        if (p2^.An >= MaxUrlsPerHost) (* and
         (HostName <> 'www.wikipedia.de') and
         (HostName <> 'de.wikipedia.org') and
         (HostName <> 'www.wikipedia.org') and
         (HostName <> 'en.wikipedia.org') and
         (HostName <> 'www.reddit.com') and
-        (HostName <> 'feedproxy.google.com')
-
-(*
-        (HostName<>'www.dmoz.org') and (HostName<>'www.wikipedia.de') and
-        (HostName<>'de.wikipedia.org') and (HostName<>'www.wikipedia.org') and
-        (HostName<>'en.wikipedia.org')
- *)
-
+        (HostName <> 'feedproxy.google.com') *)
         then exit; { Maximum überschritten, also sind wir hier fertig. Diese URL also *nicht* mit aufnehmen }
+
+
+
         Inc(p2^.An); { URL-Anzahl für diesen Listeneintrag um 1 erhöhen }
     end;
 
@@ -386,7 +404,9 @@ begin
                 begin
                     if // (UrlData.InfPo = -1) and
                     (PathDepth(UrlData.Url) <= MaximumPathDepth) then
-                        AddEntry(UrlData.Url, UrlPo, UrlData.InLinkCount) { URL speichern }
+		    begin
+                        AddEntry(UrlData.Url, UrlPo, UrlData.InLinkCount); { URL speichern }
+		    end;
                 end;
             end;
             Inc(ThisNr);
